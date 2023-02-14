@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 )
 
 type Request struct {
@@ -80,12 +81,18 @@ func (r *Request) GetInt(name string) (int, error) {
 		return 0, fmt.Errorf("parameter '%s' not found", name)
 	}
 
-	iVal, ok := val.(int)
-	if !ok {
+	switch v := val.(type) {
+	case int:
+		return v, nil
+	case string:
+		iVal, err := strconv.Atoi(v)
+		if err != nil {
+			return 0, fmt.Errorf("parameter '%s' is not an integer: %s", name, err)
+		}
+		return iVal, nil
+	default:
 		return 0, fmt.Errorf("parameter '%s' is not an integer", name)
 	}
-
-	return iVal, nil
 }
 
 func (r *Request) GetFloat(name string) (float64, error) {
@@ -94,12 +101,18 @@ func (r *Request) GetFloat(name string) (float64, error) {
 		return 0, fmt.Errorf("parameter '%s' not found", name)
 	}
 
-	fVal, ok := val.(float64)
-	if !ok {
+	switch v := val.(type) {
+	case float64:
+		return v, nil
+	case string:
+		fVal, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return 0, fmt.Errorf("parameter '%s' is not a float: %s", name, err)
+		}
+		return fVal, nil
+	default:
 		return 0, fmt.Errorf("parameter '%s' is not a float", name)
 	}
-
-	return fVal, nil
 }
 
 func (r *Request) GetBool(name string) (bool, error) {
@@ -108,12 +121,18 @@ func (r *Request) GetBool(name string) (bool, error) {
 		return false, fmt.Errorf("parameter '%s' not found", name)
 	}
 
-	bVal, ok := val.(bool)
-	if !ok {
+	switch v := val.(type) {
+	case bool:
+		return v, nil
+	case string:
+		bVal, err := strconv.ParseBool(v)
+		if err != nil {
+			return false, fmt.Errorf("parameter '%s' is not a boolean: %s", name, err)
+		}
+		return bVal, nil
+	default:
 		return false, fmt.Errorf("parameter '%s' is not a boolean", name)
 	}
-
-	return bVal, nil
 }
 
 func (r *Request) GetArray(name string) ([]interface{}, error) {
