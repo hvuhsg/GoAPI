@@ -5,10 +5,10 @@ package main
 
 import goapi "github.com/hvuhsg/goapi"
 
-app: = goapi.GoApp(title = "hello world api")
+app: = goapi.GoApp("hello world api")
 
 var ping := app.Path("/ping")
-ping.Methods([]int{GET})
+ping.Methods(goapi.GET, goapi.POST)
 ping.Description("ping pong")
 ping.Parameter("timestamp")
 ping.Action(

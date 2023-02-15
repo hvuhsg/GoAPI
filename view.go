@@ -61,7 +61,7 @@ func (v *View) validMethod(req *http.Request) bool {
 	return ok
 }
 
-func (v *View) Methods(methods []int) *View {
+func (v *View) Methods(methods ...[]int) *View {
 	for method := range methods {
 		v._methods[method] = struct{}{}
 	}
