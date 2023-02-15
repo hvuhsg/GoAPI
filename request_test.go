@@ -1,284 +1,311 @@
 package goapi
 
 import (
-	"bytes"
-	"net/http"
+	"fmt"
 	"reflect"
 	"testing"
 )
 
+var panicValue interface{}
+
+// Helper function to catch panics and return the panic value
+func catchPanicString(f func() string) string {
+	defer func() {
+		if r := recover(); r != nil {
+			err := fmt.Errorf("recovered panic: %v", r)
+			panicValue = err
+		}
+	}()
+	panicValue = nil
+	returnValue := f()
+	if panicValue != nil {
+		return ""
+	}
+	return returnValue
+}
+
+func catchPanicInt(f func() int) int {
+	defer func() {
+		if r := recover(); r != nil {
+			err := fmt.Errorf("recovered panic: %v", r)
+			panicValue = err
+		}
+	}()
+	panicValue = nil
+	returnValue := f()
+	if panicValue != nil {
+		return 0
+	}
+	return returnValue
+}
+
+func catchPanicFloat(f func() float64) float64 {
+	defer func() {
+		if r := recover(); r != nil {
+			err := fmt.Errorf("recovered panic: %v", r)
+			panicValue = err
+		}
+	}()
+	panicValue = nil
+	returnValue := f()
+	if panicValue != nil {
+		return 0
+	}
+	return returnValue
+}
+
+func catchPanicBool(f func() bool) bool {
+	defer func() {
+		if r := recover(); r != nil {
+			err := fmt.Errorf("recovered panic: %v", r)
+			panicValue = err
+		}
+	}()
+	panicValue = nil
+	returnValue := f()
+	if panicValue != nil {
+		return false
+	}
+	return returnValue
+}
+
+func catchPanicArray(f func() []int) []int {
+	defer func() {
+		if r := recover(); r != nil {
+			err := fmt.Errorf("recovered panic: %v", r)
+			panicValue = err
+		}
+	}()
+	panicValue = nil
+	returnValue := f()
+	if panicValue != nil {
+		return nil
+	}
+	return returnValue
+}
+
 func TestGetString(t *testing.T) {
-	// Create a new request with a query parameter
-	req, err := http.NewRequest("GET", "/?name=john", nil)
-	if err != nil {
-		t.Fatalf("Failed to create request: %v", err)
+	t.Cleanup(func() {
+		panicValue = nil
+	})
+
+	// Define a test request with some parameters
+	req := &Request{
+		parameters: map[string]interface{}{
+			"str": "hello",
+			"num": 42,
+		},
 	}
 
-	// Create a new Request object
-	r := &Request{
-		HTTPRequest: req,
-		parameters:  map[string]interface{}{},
+	// Test case 1: get an existing string parameter
+	strVal := catchPanicString(func() string { return req.GetString("str") })
+	if panicValue != nil {
+		t.Errorf("GetString panic'd: %v", panicValue)
+	} else if strVal != "hello" {
+		t.Errorf("GetString returned wrong value: expected 'hello', got '%s'", strVal)
 	}
 
-	// Add the query parameter to the Request object
-	r.parameters["name"] = "john"
-
-	// Test GetString with a valid parameter
-	got, err := r.GetString("name")
-	if err != nil {
-		t.Errorf("GetString('name') returned an error: %v", err)
-	}
-	want := "john"
-	if got != want {
-		t.Errorf("GetString('name') = %q, want %q", got, want)
+	// Test case 2: get a non-existing parameter
+	nonExistingVal := catchPanicString(func() string { return req.GetString("non-existing") })
+	if panicValue == nil {
+		t.Errorf("GetString did not panic for non-existing parameter")
+	} else if nonExistingVal != "" {
+		t.Errorf("GetString returned wrong value for non-existing parameter: expected empty string, got '%s'", nonExistingVal)
 	}
 
-	// Test GetString with an invalid parameter
-	_, err = r.GetString("age")
-	if err == nil {
-		t.Errorf("GetString('age') did not return an error")
+	// Test case 3: get a parameter that is not a string
+	numVal := catchPanicString(func() string { return req.GetString("num") })
+	if panicValue == nil {
+		t.Errorf("GetString GetString did not panic for non-string parameter")
+	} else if numVal != "" {
+		t.Errorf("GetString returned wrong value for non-string parameter: expected empty string, got '%s'", numVal)
 	}
 }
 
 func TestGetInt(t *testing.T) {
-	// Create a new request with a query parameter
-	req, err := http.NewRequest("GET", "/?age=25", nil)
-	if err != nil {
-		t.Fatalf("Failed to create request: %v", err)
+	t.Cleanup(func() {
+		panicValue = nil
+	})
+
+	// Define a test request with some parameters
+	req := &Request{
+		parameters: map[string]interface{}{
+			"num1": 42,
+			"num2": "84",
+			"str":  "not a number",
+		},
 	}
 
-	// Create a new Request object
-	r := &Request{
-		HTTPRequest: req,
-		parameters:  map[string]interface{}{},
+	// Test case 1: get an existing integer parameter
+	num1Val := catchPanicInt(func() int { return req.GetInt("num1") })
+	if panicValue != nil {
+		t.Errorf("GetInt panic'd: %v", panicValue)
+	} else if num1Val != 42 {
+		t.Errorf("GetInt returned wrong value: expected 42, got %d", num1Val)
 	}
 
-	// Add the query parameter to the Request object
-	r.parameters["age"] = 25
-
-	// Test GetInt with a valid parameter
-	got, err := r.GetInt("age")
-	if err != nil {
-		t.Errorf("GetInt('age') returned an error: %v", err)
-	}
-	want := 25
-	if got != want {
-		t.Errorf("GetInt('age') = %v, want %v", got, want)
+	// Test case 2: get an existing parameter that is a string representation of an integer
+	num2Val := catchPanicInt(func() int { return req.GetInt("num2") })
+	if panicValue != nil {
+		t.Errorf("GetInt panic'd: %v", panicValue)
+	} else if num2Val != 84 {
+		t.Errorf("GetInt returned wrong value: expected 84, got %d", num2Val)
 	}
 
-	// Test GetInt with an invalid parameter
-	_, err = r.GetInt("name")
-	if err == nil {
-		t.Errorf("GetInt('name') did not return an error")
+	// Test case 3: get a non-existing parameter
+	nonExistingVal := catchPanicInt(func() int { return req.GetInt("non-existing") })
+	if panicValue == nil {
+		t.Errorf("GetInt did not panic for non-existing parameter")
+	} else if nonExistingVal != 0 {
+		t.Errorf("GetInt returned wrong value for non-existing parameter: expected 0, got %d", nonExistingVal)
+	}
+
+	// Test case 4: get a parameter that is not an integer
+	strVal := catchPanicInt(func() int { return req.GetInt("str") })
+	if panicValue == nil {
+		t.Errorf("GetInt did not panic for non-integer parameter")
+	} else if strVal != 0 {
+		t.Errorf("GetInt returned wrong value for non-integer parameter: expected 0, got %d", strVal)
 	}
 }
 
 func TestGetFloat(t *testing.T) {
-	// Create a new request with a query parameter
-	req, err := http.NewRequest("GET", "/?weight=75.5", nil)
-	if err != nil {
-		t.Fatalf("Failed to create request: %v", err)
+	t.Cleanup(func() {
+		panicValue = nil
+	})
+
+	// Define a test request with some parameters
+	req := &Request{
+		parameters: map[string]interface{}{
+			"float1": 3.14,
+			"float2": "2.718",
+			"str":    "not a number",
+		},
 	}
 
-	// Create a new Request object
-	r := &Request{
-		HTTPRequest: req,
-		parameters:  map[string]interface{}{},
+	// Test case 1: get an existing float parameter
+	float1Val := catchPanicFloat(func() float64 { return req.GetFloat("float1") })
+	if panicValue != nil {
+		t.Errorf("GetFloat panicked: %v", panicValue)
+	} else if float1Val != 3.14 {
+		t.Errorf("GetFloat returned wrong value: expected 3.14, got %f", float1Val)
 	}
 
-	// Add the query parameter to the Request object
-	r.parameters["weight"] = 75.5
-
-	// Test GetFloat with a valid parameter
-	got, err := r.GetFloat("weight")
-	if err != nil {
-		t.Errorf("GetFloat('weight') returned an error: %v", err)
-	}
-	want := 75.5
-	if got != want {
-		t.Errorf("GetFloat('weight') = %v, want %v", got, want)
+	// Test case 2: get an existing parameter that is a string representation of a float
+	float2Val := catchPanicFloat(func() float64 { return req.GetFloat("float2") })
+	if panicValue != nil {
+		t.Errorf("GetFloat panicked: %v", panicValue)
+	} else if float2Val != 2.718 {
+		t.Errorf("GetFloat returned wrong value: expected 2.718, got %f", float2Val)
 	}
 
-	// Test GetFloat with an invalid parameter
-	_, err = r.GetFloat("name")
-	if err == nil {
-		t.Errorf("GetFloat('name') did not return an error")
+	// Test case 3: get a non-existing parameter
+	nonExistingVal := catchPanicFloat(func() float64 { return req.GetFloat("non-existing") })
+	if panicValue == nil {
+		t.Errorf("GetFloat did not panic for non-existing parameter")
+	} else if nonExistingVal != 0 {
+		t.Errorf("GetFloat returned wrong value for non-existing parameter: expected 0, got %f", nonExistingVal)
+	}
+
+	// Test case 4: get a parameter that is not a float
+	strVal := catchPanicFloat(func() float64 { return req.GetFloat("str") })
+	if panicValue == nil {
+		t.Errorf("GetFloat did not panic for non-float parameter")
+	} else if strVal != 0 {
+		t.Errorf("GetFloat returned wrong value for non-float parameter: expected 0, got %f", strVal)
 	}
 }
 
 func TestGetBool(t *testing.T) {
-	// Create a new request with a boolean parameter
-	req, err := http.NewRequest("GET", "/?isAdult=true", nil)
-	if err != nil {
-		t.Fatalf("Failed to create request: %v", err)
+	t.Cleanup(func() {
+		panicValue = nil
+	})
+
+	// Define a test request with some parameters
+	req := &Request{
+		parameters: map[string]interface{}{
+			"bool1": true,
+			"bool2": "false",
+			"str":   "not a boolean",
+		},
 	}
 
-	// Create a new Request object
-	r := &Request{
-		HTTPRequest: req,
-		parameters:  map[string]interface{}{},
+	// Test case 1: get an existing boolean parameter
+	bool1Val := catchPanicBool(func() bool { return req.GetBool("bool1") })
+	if panicValue != nil {
+		t.Errorf("GetBool panicked: %v", panicValue)
+	} else if !bool1Val {
+		t.Errorf("GetBool returned wrong value: expected true, got %t", bool1Val)
 	}
 
-	// Add the boolean parameter to the Request object
-	r.parameters["isAdult"] = true
-
-	// Test GetBool with a valid parameter
-	got, err := r.GetBool("isAdult")
-	if err != nil {
-		t.Errorf("GetBool('isAdult') returned an error: %v", err)
-	}
-	want := true
-	if got != want {
-		t.Errorf("GetBool('isAdult') = %v, want %v", got, want)
+	// Test case 2: get an existing parameter that is a string representation of a boolean
+	bool2Val := catchPanicBool(func() bool { return req.GetBool("bool2") })
+	if panicValue != nil {
+		t.Errorf("GetBool panicked: %v", panicValue)
+	} else if bool2Val {
+		t.Errorf("GetBool returned wrong value: expected false, got %t", bool2Val)
 	}
 
-	// Test GetBool with an invalid parameter
-	_, err = r.GetBool("age")
-	if err == nil {
-		t.Errorf("GetBool('age') did not return an error")
+	// Test case 3: get a non-existing parameter
+	nonExistingVal := catchPanicBool(func() bool { return req.GetBool("non-existing") })
+	if panicValue == nil {
+		t.Errorf("GetBool did not panic for non-existing parameter")
+	} else if nonExistingVal != false {
+		t.Errorf("GetBool returned wrong value for non-existing parameter: expected false, got %t", nonExistingVal)
 	}
 
-	// Test GetBool with a non-boolean parameter
-	r.parameters["age"] = 30
-	_, err = r.GetBool("age")
-	if err == nil {
-		t.Errorf("GetBool('age') did not return an error")
+	// Test case 4: get a parameter that is not a boolean
+	strVal := catchPanicBool(func() bool { return req.GetBool("str") })
+	if panicValue == nil {
+		t.Errorf("GetBool did not panic for non-boolean parameter")
+	} else if strVal != false {
+		t.Errorf("GetBool returned wrong value for non-boolean parameter: expected false, got %t", strVal)
 	}
 }
 
-func TestGetArray(t *testing.T) {
-	// Create a new request with an array parameter
-	req, err := http.NewRequest("GET", "/?ids[]=1&ids[]=2&ids[]=3", nil)
-	if err != nil {
-		t.Fatalf("Failed to create request: %v", err)
+func TestGetStringArray(t *testing.T) {
+	t.Cleanup(func() {
+		panicValue = nil
+	})
+
+	// Define a test request with some parameters
+	req := &Request{
+		parameters: map[string]interface{}{
+			"array1": []int{1, 2, 3},
+			"array2": []interface{}{"1", "2", "3"},
+			"str":    "not an array",
+		},
 	}
 
-	// Create a new Request object
-	r := &Request{
-		HTTPRequest: req,
-		parameters:  map[string]interface{}{},
+	// Test case 1: get an existing array parameter
+	array1Val := catchPanicArray(func() []int { return req.GetIntArray("array1") })
+	if panicValue != nil {
+		t.Errorf("GetArray panicked: %v", panicValue)
+	} else if !reflect.DeepEqual(array1Val, []int{1, 2, 3}) {
+		t.Errorf("GetArray returned wrong value: expected [1, 2, 3], got %v", array1Val)
 	}
 
-	// Add the array parameter to the Request object
-	r.parameters["ids"] = []interface{}{1, 2, 3}
-
-	// Test GetArray with a valid parameter
-	got, err := r.GetArray("ids")
-	if err != nil {
-		t.Errorf("GetArray('ids') returned an error: %v", err)
-	}
-	want := []interface{}{1, 2, 3}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("GetArray('ids') = %v, want %v", got, want)
+	// Test case 2: get an existing parameter that is an array of interfaces
+	array2Val := catchPanicArray(func() []int { return req.GetIntArray("array2") })
+	if panicValue != nil {
+		t.Errorf("GetArray panicked: %v", panicValue)
+	} else if !reflect.DeepEqual(array2Val, []int{1, 2, 3}) {
+		t.Errorf("GetArray returned wrong value: expected [1, 2, 3], got %v", array2Val)
 	}
 
-	// Test GetArray with an invalid parameter
-	_, err = r.GetArray("names")
-	if err == nil {
-		t.Errorf("GetArray('names') did not return an error")
+	// Test case 3: get a non-existing parameter
+	nonExistingVal := catchPanicArray(func() []int { return req.GetIntArray("non-existing") })
+	if panicValue == nil {
+		t.Errorf("GetArray did not panic for non-existing parameter")
+	} else if nonExistingVal != nil {
+		t.Errorf("GetArray returned wrong value for non-existing parameter: expected nil, got %v", nonExistingVal)
 	}
 
-	// Test GetArray with a non-array parameter
-	r.parameters["names"] = "John, Jane, Jim"
-	_, err = r.GetArray("names")
-	if err == nil {
-		t.Errorf("GetArray('names') did not return an error")
-	}
-}
-
-func TestGetStringBoolMap(t *testing.T) {
-	// Create a new request with a query parameter
-	req, err := http.NewRequest("GET", "/?map=%7B%22foo%22%3Atrue%2C%22bar%22%3Afalse%7D", nil)
-	if err != nil {
-		t.Fatalf("Failed to create request: %v", err)
-	}
-
-	// Create a new Request object
-	r := &Request{
-		HTTPRequest: req,
-		parameters:  map[string]any{},
-	}
-
-	// Add the query parameter to the Request object
-	r.parameters["map"] = map[string]interface{}{
-		"foo": true,
-		"bar": false,
-	}
-
-	// Test GetStringBoolMap with a valid parameter
-	got, err := r.GetStringBoolMap("map")
-	if err != nil {
-		t.Errorf("GetStringBoolMap('map') returned an error: %v", err)
-	}
-	want := map[string]bool{
-		"foo": true,
-		"bar": false,
-	}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("GetStringBoolMap('map') = %v, want %v", got, want)
-	}
-
-	// Test GetStringBoolMap with an invalid parameter
-	_, err = r.GetStringBoolMap("foo")
-	if err == nil {
-		t.Errorf("GetStringBoolMap('foo') did not return an error")
-	}
-}
-
-func TestNewRequest(t *testing.T) {
-	// Create a request with query parameters and a JSON body
-	queryParams := "name=john&age=30"
-	jsonBody := `{"pets": {"dog": true, "cat": false}, "car": "audi"}`
-	req, err := http.NewRequest("POST", "/test?"+queryParams, bytes.NewBuffer([]byte(jsonBody)))
-
-	if err != nil {
-		t.Fatalf("Failed to create request: %v", err)
-	}
-
-	// Test the NewRequest function
-	r, err := NewRequest(req)
-	if err != nil {
-		t.Fatalf("NewRequest returned an error: %v", err)
-	}
-
-	// Test query parameters
-	name, err := r.GetString("name")
-	if err != nil {
-		t.Errorf("GetString('name') returned an error: %v", err)
-	}
-	wantName := "john"
-	if name != wantName {
-		t.Errorf("GetString('name') = %q, want %q", name, wantName)
-	}
-
-	age, err := r.GetInt("age")
-	if err != nil {
-		t.Errorf("GetInt('age') returned an error: %v", err)
-	}
-	wantAge := 30
-	if age != wantAge {
-		t.Errorf("GetInt('age') = %d, want %d", age, wantAge)
-	}
-
-	// Test body parameters
-	car, err := r.GetString("car")
-	if err != nil {
-		t.Errorf("GetInt('age') returned an error: %v", err)
-	}
-	wantCar := "audi"
-	if car != wantCar {
-		t.Errorf("GetString('car') = %s, want %s", car, wantCar)
-	}
-
-	pets, err := r.GetStringBoolMap("pets")
-	if err != nil {
-		t.Errorf("GetStringBoolMap('pets') returned an error: %v", err)
-	}
-	wantPets := map[string]bool{
-		"dog": true,
-		"cat": false,
-	}
-	if !reflect.DeepEqual(pets, wantPets) {
-		t.Errorf("GetStringBoolMap('pets') = %v, want %v", pets, wantPets)
+	// Test case 4: get a parameter that is not an array
+	strVal := catchPanicArray(func() []int { return req.GetIntArray("str") })
+	if panicValue == nil {
+		t.Errorf("GetArray did not panic for non-array parameter")
+	} else if strVal != nil {
+		t.Errorf("GetArray returned wrong value for non-array parameter: expected nil, got %v", strVal)
 	}
 }

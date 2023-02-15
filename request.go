@@ -61,86 +61,198 @@ func NewRequest(req *http.Request) (*Request, error) {
 	}, nil
 }
 
-func (r *Request) GetString(name string) (string, error) {
+func (r *Request) GetString(name string) string {
 	val, ok := r.parameters[name]
 	if !ok {
-		return "", fmt.Errorf("parameter '%s' not found", name)
+		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
 
 	sVal, ok := val.(string)
 	if !ok {
-		return "", fmt.Errorf("parameter '%s' is not a string", name)
+		panic(fmt.Sprintf("parameter '%s' is not a string", name))
 	}
 
-	return sVal, nil
+	return sVal
 }
 
-func (r *Request) GetInt(name string) (int, error) {
+func (r *Request) GetInt(name string) int {
 	val, ok := r.parameters[name]
 	if !ok {
-		return 0, fmt.Errorf("parameter '%s' not found", name)
+		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
 
 	switch v := val.(type) {
 	case int:
-		return v, nil
+		return v
 	case string:
 		iVal, err := strconv.Atoi(v)
 		if err != nil {
-			return 0, fmt.Errorf("parameter '%s' is not an integer: %s", name, err)
+			panic(fmt.Sprintf("parameter '%s' is not an integer: %s", name, err))
 		}
-		return iVal, nil
+		return iVal
 	default:
-		return 0, fmt.Errorf("parameter '%s' is not an integer", name)
+		panic(fmt.Sprintf("parameter '%s' is not an integer", name))
 	}
 }
 
-func (r *Request) GetFloat(name string) (float64, error) {
+func (r *Request) GetFloat(name string) float64 {
 	val, ok := r.parameters[name]
 	if !ok {
-		return 0, fmt.Errorf("parameter '%s' not found", name)
+		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
 
 	switch v := val.(type) {
+	case float32:
+		return float64(v)
 	case float64:
-		return v, nil
+		return v
 	case string:
 		fVal, err := strconv.ParseFloat(v, 64)
 		if err != nil {
-			return 0, fmt.Errorf("parameter '%s' is not a float: %s", name, err)
+			panic(fmt.Sprintf("parameter '%s' is not a float: %s", name, err))
 		}
-		return fVal, nil
+		return fVal
 	default:
-		return 0, fmt.Errorf("parameter '%s' is not a float", name)
+		panic(fmt.Sprintf("parameter '%s' is not a float", name))
 	}
 }
 
-func (r *Request) GetBool(name string) (bool, error) {
+func (r *Request) GetBool(name string) bool {
 	val, ok := r.parameters[name]
 	if !ok {
-		return false, fmt.Errorf("parameter '%s' not found", name)
+		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
 
 	switch v := val.(type) {
 	case bool:
-		return v, nil
+		return v
 	case string:
 		bVal, err := strconv.ParseBool(v)
 		if err != nil {
-			return false, fmt.Errorf("parameter '%s' is not a boolean: %s", name, err)
+			panic(fmt.Sprintf("parameter '%s' is not a boolean: %s", name, err))
 		}
-		return bVal, nil
+		return bVal
 	default:
-		return false, fmt.Errorf("parameter '%s' is not a boolean", name)
+		panic(fmt.Sprintf("parameter '%s' is not a boolean", name))
 	}
 }
 
-func (r *Request) GetArray(name string) ([]interface{}, error) {
-	value, ok := r.parameters[name].([]interface{})
+func (r *Request) GetArray(name string) []interface{} {
+	val, ok := r.parameters[name]
 	if !ok {
-		return nil, fmt.Errorf("parameter %s not found or not an array", name)
+		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
-	return value, nil
+
+	switch v := val.(type) {
+	case []interface{}:
+		return v
+	default:
+		panic(fmt.Sprintf("parameter '%s' is not an array", name))
+	}
+}
+
+func (r *Request) GetStringArray(name string) []string {
+	val, ok := r.parameters[name]
+	if !ok {
+		panic(fmt.Sprintf("parameter '%s' not found", name))
+	}
+
+	switch v := val.(type) {
+	case []string:
+		return v
+	case string:
+		return []string{v}
+	default:
+		panic(fmt.Sprintf("parameter '%s' is not an array of strings", name))
+	}
+}
+
+func (r *Request) GetIntArray(name string) []int {
+	val, ok := r.parameters[name]
+	if !ok {
+		panic(fmt.Sprintf("parameter '%s' not found", name))
+	}
+
+	switch v := val.(type) {
+	case []int:
+		return v
+	case []string:
+		var intValues []int
+		for _, s := range v {
+			iVal, err := strconv.Atoi(s)
+			if err != nil {
+				panic(fmt.Sprintf("parameter '%s' contains non-integer value: %s", name, s))
+			}
+			intValues = append(intValues, iVal)
+		}
+		return intValues
+	case []interface{}:
+		var intValues []int
+		for _, s := range v {
+			sVal, ok := s.(string)
+			if !ok {
+				panic(fmt.Sprintf("parameter '%s' contains non-integer value: %s", name, s))
+			}
+
+			iVal, err := strconv.Atoi(sVal)
+			if err != nil {
+				panic(fmt.Sprintf("parameter '%s' contains non-integer value: %s", name, s))
+			}
+
+			intValues = append(intValues, iVal)
+		}
+		return intValues
+	default:
+		panic(fmt.Sprintf("parameter '%s' is not an array of integers", name))
+	}
+}
+
+func (r *Request) GetFloatArray(name string) []float64 {
+	val, ok := r.parameters[name]
+	if !ok {
+		panic(fmt.Sprintf("parameter '%s' not found", name))
+	}
+
+	switch v := val.(type) {
+	case []float64:
+		return v
+	case []string:
+		var floatValues []float64
+		for _, s := range v {
+			fVal, err := strconv.ParseFloat(s, 64)
+			if err != nil {
+				panic(fmt.Sprintf("parameter '%s' contains non-float value: %s", name, s))
+			}
+			floatValues = append(floatValues, fVal)
+		}
+		return floatValues
+	default:
+		panic(fmt.Sprintf("parameter '%s' is not an array of floats", name))
+	}
+}
+
+func (r *Request) GetBoolArray(name string) []bool {
+	val, ok := r.parameters[name]
+	if !ok {
+		panic(fmt.Sprintf("parameter '%s' not found", name))
+	}
+
+	switch v := val.(type) {
+	case []bool:
+		return v
+	case []string:
+		var boolValues []bool
+		for _, s := range v {
+			bVal, err := strconv.ParseBool(s)
+			if err != nil {
+				panic(fmt.Sprintf("parameter '%s' contains non-boolean value: %s", name, s))
+			}
+			boolValues = append(boolValues, bVal)
+		}
+		return boolValues
+	default:
+		panic(fmt.Sprintf("parameter '%s' is not an array of booleans", name))
+	}
 }
 
 func (r *Request) GetMap(name string) (map[string]interface{}, error) {
@@ -149,29 +261,6 @@ func (r *Request) GetMap(name string) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("parameter %s not found or not a map", name)
 	}
 	return value, nil
-}
-
-func (r *Request) GetIntArray(name string) ([]int, error) {
-	val, ok := r.parameters[name]
-	if !ok {
-		return nil, fmt.Errorf("parameter '%s' not found", name)
-	}
-
-	arr, ok := val.([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("parameter '%s' is not an array", name)
-	}
-
-	intArr := make([]int, len(arr))
-	for i, v := range arr {
-		intVal, ok := v.(int)
-		if !ok {
-			return nil, fmt.Errorf("parameter '%s' contains a non-integer value", name)
-		}
-		intArr[i] = intVal
-	}
-
-	return intArr, nil
 }
 
 func (r *Request) GetStringBoolMap(name string) (map[string]bool, error) {

@@ -12,10 +12,10 @@ ping.Methods(goapi.GET, goapi.POST)
 ping.Description("ping pong")
 ping.Parameter("timestamp")
 ping.Action(
-    func (request) {
-        timestamp := request.get("timestamp")
+    func (request *goapi.Request) {
+        timestamp := request.GetInt("timestamp")
         return map[string] string {
-            "message": "pong"
+            "message": "pong", "timestamp": strconv.Iota(timestapm)
         }
     }
 )
