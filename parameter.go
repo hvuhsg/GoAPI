@@ -1,12 +1,10 @@
 package goapi
 
 type Parameter struct {
-	name string
-	// TODO: add validator
+	name       string
+	validators []Validator
 }
 
-func NewParameter(name string) *Parameter {
-	param := new(Parameter)
-	param.name = name
-	return param
+func NewParameter(name string, validators []Validator) Parameter {
+	return Parameter{name: name, validators: validators}
 }

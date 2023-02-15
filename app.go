@@ -10,17 +10,31 @@ type App struct {
 	views map[string]*View
 }
 
-func GoApp(title string) *App {
+func GoAPI(title string) *App {
 	app := new(App)
 	app.title = title
 	app.views = make(map[string]*View)
 	return app
 }
 
+func (a *App) registerViews(mux *http.ServeMux) {
+	// Register each view's path to the corresponding HTTP handler function
+	for path, view := range a.views {
+		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			if view.validMethod(r) {
+				gReq := NewRequest(r)
+				view._action(gReq)
+				w.WriteHeader(200)
+			} else {
+				http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+			}
+		})
+	}
+}
+
 func (a *App) Path(path string) *View {
 	_, ok := a.views[path]
 	if ok {
-		// already exists
 		panic(fmt.Sprintf("path %s already registred", path))
 	}
 
@@ -32,19 +46,7 @@ func (a *App) Path(path string) *View {
 
 func (a *App) Run(host string, port int) error {
 	mux := http.NewServeMux()
-
-	// Register each view's path to the corresponding HTTP handler function
-	for path, view := range a.views {
-		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
-			if view.validMethod(r) {
-				view._action(r)
-				w.WriteHeader(200)
-				// w.Write(response.ToBytes())
-			} else {
-				http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
-			}
-		})
-	}
+	a.registerViews(mux)
 
 	addr := fmt.Sprintf("%s:%d", host, port)
 	fmt.Printf("Starting server at %s\n", addr)

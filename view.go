@@ -29,16 +29,16 @@ var methodStringToCode = map[string]int{
 type View struct {
 	_path        string
 	_methods     map[int]struct{}
-	_parameters  map[string]any
+	_parameters  map[string]Parameter
 	_description string
-	_action      func(request any) any
+	_action      func(request *Request) any
 }
 
 func NewView(path string) *View {
 	view := new(View)
 	view._path = path
 	view._methods = make(map[int]struct{})
-	view._parameters = make(map[string]any)
+	view._parameters = make(map[string]Parameter)
 	view._description = ""
 	view._action = nil
 	return view
@@ -61,7 +61,7 @@ func (v *View) validMethod(req *http.Request) bool {
 	return ok
 }
 
-func (v *View) Methods(methods ...[]int) *View {
+func (v *View) Methods(methods ...int) *View {
 	for method := range methods {
 		v._methods[method] = struct{}{}
 	}
@@ -74,14 +74,14 @@ func (v *View) Description(description string) *View {
 	return v
 }
 
-func (v *View) Parameter(paramName string) *View {
+func (v *View) Parameter(paramName string, validators ...Validator) *View {
 	v.requireMethods()
 	v.requireDescription()
-	v._parameters[paramName] = NewParameter(paramName)
+	v._parameters[paramName] = NewParameter(paramName, validators)
 	return v
 }
 
-func (v *View) Action(f func(request any) any) {
+func (v *View) Action(f func(request *Request) any) {
 	v.requireMethods()
 	v.requireDescription()
 

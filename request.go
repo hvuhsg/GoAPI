@@ -13,21 +13,22 @@ type Request struct {
 	parameters  map[string]any
 }
 
-func NewRequest(req *http.Request) (*Request, error) {
-	err := req.ParseForm()
-	if err != nil {
-		return nil, err
-	}
-
+func NewRequest(req *http.Request) *Request {
 	params := make(map[string]interface{})
-	for k, v := range req.Form {
-		if len(v) == 1 {
-			params[k] = v[0]
-		} else {
-			params[k] = v
+
+	// Parse form params
+	err := req.ParseForm()
+	if err == nil {
+		for k, v := range req.Form {
+			if len(v) == 1 {
+				params[k] = v[0]
+			} else {
+				params[k] = v
+			}
 		}
 	}
 
+	// Parse query params
 	for k, v := range req.URL.Query() {
 		if len(v) == 1 {
 			params[k] = v[0]
@@ -36,6 +37,7 @@ func NewRequest(req *http.Request) (*Request, error) {
 		}
 	}
 
+	// Parse post-form params
 	for k, v := range req.PostForm {
 		if len(v) == 1 {
 			params[k] = v[0]
@@ -44,21 +46,20 @@ func NewRequest(req *http.Request) (*Request, error) {
 		}
 	}
 
+	// Parse body params
 	decoder := json.NewDecoder(req.Body)
 	var bodyParams interface{}
 	err = decoder.Decode(&bodyParams)
-	if err != nil && err != io.EOF {
-		return nil, err
-	}
-
-	for k, v := range bodyParams.(map[string]interface{}) {
-		params[k] = v
+	if err == nil || err == io.EOF {
+		for k, v := range bodyParams.(map[string]interface{}) {
+			params[k] = v
+		}
 	}
 
 	return &Request{
 		HTTPRequest: req,
 		parameters:  params,
-	}, nil
+	}
 }
 
 func (r *Request) GetString(name string) string {

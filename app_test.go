@@ -7,7 +7,7 @@ import (
 )
 
 func TestCreateView(t *testing.T) {
-	app := goapi.GoApp("title")
+	app := goapi.GoAPI("title")
 
 	t.Run("No methods", func(t *testing.T) {
 		defer func() {
@@ -17,7 +17,7 @@ func TestCreateView(t *testing.T) {
 		}()
 
 		app.Path("/a").Description("test view").Parameter("t").Action(
-			func(request any) any { return 1 },
+			func(request *goapi.Request) any { return 1 },
 		)
 	})
 
@@ -28,8 +28,8 @@ func TestCreateView(t *testing.T) {
 			}
 		}()
 
-		app.Path("/b").Methods([]int{goapi.GET}).Parameter("t").Action(
-			func(request any) any { return 1 },
+		app.Path("/b").Methods(goapi.GET).Parameter("t").Action(
+			func(request *goapi.Request) any { return 1 },
 		)
 	})
 
@@ -40,16 +40,16 @@ func TestCreateView(t *testing.T) {
 			}
 		}()
 
-		app.Path("/c").Methods([]int{goapi.GET}).Description("c").Parameter("t").Action(
-			func(request any) any { return 1 },
+		app.Path("/c").Methods(goapi.GET).Description("c").Parameter("t").Action(
+			func(request *goapi.Request) any { return 1 },
 		)
-		app.Path("/c").Methods([]int{goapi.GET}).Description("c").Parameter("t").Action(
-			func(request any) any { return 1 },
+		app.Path("/c").Methods(goapi.GET).Description("c").Parameter("t").Action(
+			func(request *goapi.Request) any { return 1 },
 		)
 	})
 
-	app.Path("/").Methods([]int{goapi.GET}).Description("test view").Parameter("t").Action(
-		func(request any) any {
+	app.Path("/").Methods(goapi.GET).Description("test view").Parameter("t").Action(
+		func(request *goapi.Request) any {
 			return 1
 		},
 	)
