@@ -7,14 +7,18 @@ import goapi "github.com/hvuhsg/goapi"
 
 app: = goapi.GoApp(title = "hello world api")
 
-app.Path("/ping").Methods([]int{GET}).Description("ping pong").Parameter("timestamp").Action(
-        func ping(request) {
-            timestamp := request.get("timestamp")
-            return map[string] string {
-                "message": "pong"
-            }
+var ping := app.Path("/ping")
+ping.Methods([]int{GET})
+ping.Description("ping pong")
+ping.Parameter("timestamp")
+ping.Action(
+    func (request) {
+        timestamp := request.get("timestamp")
+        return map[string] string {
+            "message": "pong"
         }
-    )
+    }
+)
 
 
 func main() {
