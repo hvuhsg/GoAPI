@@ -23,8 +23,9 @@ func (a *App) registerViews(mux *http.ServeMux) {
 		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 			if view.validMethod(r) {
 				gReq := NewRequest(r)
-				view._action(gReq)
+				view.action(gReq)
 				w.WriteHeader(200)
+				w.Write([]byte("hello"))
 			} else {
 				http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 			}

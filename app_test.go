@@ -1,7 +1,10 @@
 package goapi_test
 
 import (
+	"fmt"
+	"net/http"
 	"testing"
+	"time"
 
 	"github.com/hvuhsg/goapi"
 )
@@ -53,4 +56,23 @@ func TestCreateView(t *testing.T) {
 			return 1
 		},
 	)
+}
+
+func TestRunApp(t *testing.T) {
+	app := goapi.GoAPI("test")
+	ping := app.Path("/ping")
+	ping.Methods(goapi.GET)
+	ping.Description("ping pong")
+	ping.Parameter("age", goapi.VIsInt{}, goapi.VRange{Min: 5, Max: 25})
+	ping.Action(func(request *goapi.Request) any {
+		fmt.Println(request.GetInt("age"))
+		return 1
+	})
+
+	go app.Run("127.0.0.1", 8080)
+
+	time.Sleep(time.Millisecond * 200)
+
+	resp, _ := http.Get("http://127.0.0.1:8080/ping?age=2")
+	fmt.Printf("response: %d", resp.StatusCode)
 }

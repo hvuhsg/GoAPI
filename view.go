@@ -27,57 +27,57 @@ var methodStringToCode = map[string]int{
 }
 
 type View struct {
-	_path        string
-	_methods     map[int]struct{}
-	_parameters  map[string]Parameter
-	_description string
-	_action      func(request *Request) any
+	path        string
+	methods     map[int]struct{}
+	parameters  map[string]Parameter
+	description string
+	action      func(request *Request) any
 }
 
 func NewView(path string) *View {
 	view := new(View)
-	view._path = path
-	view._methods = make(map[int]struct{})
-	view._parameters = make(map[string]Parameter)
-	view._description = ""
-	view._action = nil
+	view.path = path
+	view.methods = make(map[int]struct{})
+	view.parameters = make(map[string]Parameter)
+	view.description = ""
+	view.action = nil
 	return view
 }
 
 func (v *View) requireMethods() {
-	if len(v._methods) == 0 {
+	if len(v.methods) == 0 {
 		panic("declere methods first '.Methods[GET, POST, ...]'")
 	}
 }
 
 func (v *View) requireDescription() {
-	if v._description == "" {
+	if v.description == "" {
 		panic("declere description for view '.Description(\"<view description>\")'")
 	}
 }
 
 func (v *View) validMethod(req *http.Request) bool {
-	_, ok := v._methods[methodStringToCode[req.Method]]
+	_, ok := v.methods[methodStringToCode[req.Method]]
 	return ok
 }
 
 func (v *View) Methods(methods ...int) *View {
 	for method := range methods {
-		v._methods[method] = struct{}{}
+		v.methods[method] = struct{}{}
 	}
 	return v
 }
 
 func (v *View) Description(description string) *View {
 	v.requireMethods()
-	v._description = description
+	v.description = description
 	return v
 }
 
 func (v *View) Parameter(paramName string, validators ...Validator) *View {
 	v.requireMethods()
 	v.requireDescription()
-	v._parameters[paramName] = NewParameter(paramName, validators)
+	v.parameters[paramName] = NewParameter(paramName, validators)
 	return v
 }
 
@@ -85,5 +85,5 @@ func (v *View) Action(f func(request *Request) any) {
 	v.requireMethods()
 	v.requireDescription()
 
-	v._action = f
+	v.action = f
 }

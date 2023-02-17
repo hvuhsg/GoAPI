@@ -3,7 +3,6 @@ package goapi
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 )
@@ -50,9 +49,12 @@ func NewRequest(req *http.Request) *Request {
 	decoder := json.NewDecoder(req.Body)
 	var bodyParams interface{}
 	err = decoder.Decode(&bodyParams)
-	if err == nil || err == io.EOF {
-		for k, v := range bodyParams.(map[string]interface{}) {
-			params[k] = v
+	if err == nil {
+		mapBodyParams, ok := bodyParams.(map[string]interface{})
+		if ok {
+			for k, v := range mapBodyParams {
+				params[k] = v
+			}
 		}
 	}
 
