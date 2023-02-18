@@ -9,7 +9,7 @@ const (
 
 type Parameter struct {
 	name       string
-	in         string // Where can we find this parameter
+	in         string // Where can we find this parameter (QUERY, PATH, HEADER, COOKIE)
 	validators []Validator
 }
 
