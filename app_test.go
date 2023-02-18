@@ -1,8 +1,8 @@
 package goapi_test
 
 import (
+	"io"
 	"net/http"
-	"reflect"
 	"testing"
 	"time"
 
@@ -20,7 +20,7 @@ func TestCreateView(t *testing.T) {
 		}()
 
 		app.Path("/a").Description("test view").Parameter("t").Action(
-			func(request *goapi.Request) any { return 1 },
+			func(request *goapi.Request) goapi.Response { return goapi.HtmlResponse{Content: "1"} },
 		)
 	})
 
@@ -32,7 +32,7 @@ func TestCreateView(t *testing.T) {
 		}()
 
 		app.Path("/b").Methods(goapi.GET).Parameter("t").Action(
-			func(request *goapi.Request) any { return 1 },
+			func(request *goapi.Request) goapi.Response { return goapi.HtmlResponse{Content: "1"} },
 		)
 	})
 
@@ -44,16 +44,16 @@ func TestCreateView(t *testing.T) {
 		}()
 
 		app.Path("/c").Methods(goapi.GET).Description("c").Parameter("t").Action(
-			func(request *goapi.Request) any { return 1 },
+			func(request *goapi.Request) goapi.Response { return goapi.HtmlResponse{Content: "1"} },
 		)
 		app.Path("/c").Methods(goapi.GET).Description("c").Parameter("t").Action(
-			func(request *goapi.Request) any { return 1 },
+			func(request *goapi.Request) goapi.Response { return goapi.HtmlResponse{Content: "1"} },
 		)
 	})
 
 	app.Path("/").Methods(goapi.GET).Description("test view").Parameter("t").Action(
-		func(request *goapi.Request) any {
-			return 1
+		func(request *goapi.Request) goapi.Response {
+			return goapi.HtmlResponse{Content: "1"}
 		},
 	)
 }
@@ -64,8 +64,8 @@ func TestRunApp(t *testing.T) {
 	ping.Methods(goapi.GET)
 	ping.Description("ping pong")
 	ping.Parameter("age", goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 5, Max: 25})
-	ping.Action(func(request *goapi.Request) any {
-		return request.GetInt("age")
+	ping.Action(func(request *goapi.Request) goapi.Response {
+		return goapi.JsonResponse{"age": request.GetInt("age")}
 	})
 
 	go app.Run("127.0.0.1", 8080)
@@ -82,11 +82,10 @@ func TestRunApp(t *testing.T) {
 		t.Errorf("expecting status-code 200 got %d", resp.StatusCode)
 	}
 
-	respBody := make([]byte, 100)
-	resp.Body.Read(respBody)
-	reqString := string(respBody)
+	respBody, _ := io.ReadAll(resp.Body)
+	reqString := string(respBody[:])
 
-	if reflect.DeepEqual(reqString, "10") {
-		t.Errorf("expecting response body to be '10' got '%s'", respBody)
+	if reqString != `{"age":20}` {
+		t.Errorf("expecting response body to be '{\"age\":20}' got '%s'", respBody)
 	}
 }

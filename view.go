@@ -1,7 +1,6 @@
 package goapi
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -34,7 +33,7 @@ type View struct {
 	methods     map[int]struct{}
 	parameters  map[string]Parameter
 	description string
-	action      func(request *Request) any
+	action      func(request *Request) Response
 }
 
 func NewView(path string) *View {
@@ -94,7 +93,8 @@ func (v *View) requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	response := v.action(req)
 	w.WriteHeader(200)
-	w.Write([]byte(fmt.Sprint(response)))
+	w.Header().Add("Content-Type", response.contentType())
+	w.Write(response.toBytes())
 }
 
 func (v *View) Methods(methods ...int) *View {
@@ -117,7 +117,7 @@ func (v *View) Parameter(paramName string, validators ...Validator) *View {
 	return v
 }
 
-func (v *View) Action(f func(request *Request) any) {
+func (v *View) Action(f func(request *Request) Response) {
 	v.requireMethods()
 	v.requireDescription()
 
