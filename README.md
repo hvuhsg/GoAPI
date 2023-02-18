@@ -52,6 +52,25 @@ In the above example, we have created a route at `/add` that supports GET method
 
 You can add as many routes as you like to the app instance, and each route can have its own unique set of parameters and validators (just like the deprecated sub route).
 
+## Examples
+
+To help you get started with using GoAPI, we have provided some examples in the examples directory of the repository. These examples demonstrate various use cases of the framework and how to use its features.
+
+To run the examples, navigate to the examples directory and run the following command:
+
+```sh
+go run <example_name>/main.go
+```
+
+This will start the example server `127.0.0.1:8080` and you can visit the example endpoints in your web browser or via curl.
+To see all of the endpoints tou can visit `127.0.0.1:8080/docs` to see the auto generated interactive docs.
+
+The examples included are:  
+
+- **math_api**: Simple use of methods, parameters and validators.  
+
+Feel free to use these examples as a starting point for your own projects and modify them as needed.
+
 ## Validation
 GoAPI comes with built-in validators that can be used to validate input data automatically. In the above example, we used the `VIsInt` validator to ensure that the "timestamp" parameter is an integer. We also used the `VRange` validator to ensure that the "a" and "b" parameters falls within a specified range.
 
