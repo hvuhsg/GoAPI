@@ -1,6 +1,9 @@
 package goapi
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 const (
 	GET     int = iota
@@ -59,6 +62,39 @@ func (v *View) requireDescription() {
 func (v *View) validMethod(req *http.Request) bool {
 	_, ok := v.methods[methodStringToCode[req.Method]]
 	return ok
+}
+
+func (v *View) isValidRequest(r *Request) (bool, error) {
+	for paramName, param := range v.parameters {
+		for _, validator := range param.validators {
+			err := validator.Validate(r, paramName)
+			if err != nil {
+				return false, err
+			}
+		}
+	}
+
+	return true, nil
+}
+
+func (v *View) requestHandler(w http.ResponseWriter, r *http.Request) {
+	if !v.validMethod(r) {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
+	req := NewRequest(r)
+
+	isValid, err := v.isValidRequest(req)
+
+	if !isValid {
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+
+	response := v.action(req)
+	w.WriteHeader(200)
+	w.Write([]byte(fmt.Sprint(response)))
 }
 
 func (v *View) Methods(methods ...int) *View {

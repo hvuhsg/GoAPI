@@ -1,8 +1,8 @@
 package goapi_test
 
 import (
-	"fmt"
 	"net/http"
+	"reflect"
 	"testing"
 	"time"
 
@@ -63,16 +63,30 @@ func TestRunApp(t *testing.T) {
 	ping := app.Path("/ping")
 	ping.Methods(goapi.GET)
 	ping.Description("ping pong")
-	ping.Parameter("age", goapi.VIsInt{}, goapi.VRange{Min: 5, Max: 25})
+	ping.Parameter("age", goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 5, Max: 25})
 	ping.Action(func(request *goapi.Request) any {
-		fmt.Println(request.GetInt("age"))
-		return 1
+		return request.GetInt("age")
 	})
 
 	go app.Run("127.0.0.1", 8080)
 
 	time.Sleep(time.Millisecond * 200)
 
-	resp, _ := http.Get("http://127.0.0.1:8080/ping?age=2")
-	fmt.Printf("response: %d", resp.StatusCode)
+	resp, err := http.Get("http://127.0.0.1:8080/ping?age=20")
+
+	if err != nil {
+		t.Error("not expecting error")
+	}
+
+	if resp.StatusCode != 200 {
+		t.Errorf("expecting status-code 200 got %d", resp.StatusCode)
+	}
+
+	respBody := make([]byte, 100)
+	resp.Body.Read(respBody)
+	reqString := string(respBody)
+
+	if reflect.DeepEqual(reqString, "10") {
+		t.Errorf("expecting response body to be '10' got '%s'", respBody)
+	}
 }

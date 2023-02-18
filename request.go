@@ -259,6 +259,7 @@ func (r *Request) GetBoolArray(name string) []bool {
 }
 
 func (r *Request) GetMap(name string) (map[string]interface{}, error) {
+	// FIXME
 	value, ok := r.parameters[name].(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("parameter %s not found or not a map", name)

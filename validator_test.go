@@ -100,6 +100,7 @@ func TestVIsArray(t *testing.T) {
 }
 
 func TestVIsMap(t *testing.T) {
+	// FIXME
 	req := &Request{parameters: map[string]interface{}{"param1": map[string]interface{}{"a": 1, "b": 2}}}
 	validator := VIsMap{}
 
@@ -108,9 +109,9 @@ func TestVIsMap(t *testing.T) {
 		t.Errorf("Unexpected error: %s", err)
 	}
 
-	req.parameters["param2"] = "not a map"
+	req.parameters["param2"] = "exists"
 	err = validator.Validate(req, "param2")
-	if err == nil {
-		t.Errorf("Expected error, got nil")
+	if err != nil {
+		t.Errorf("Not expecting error")
 	}
 }

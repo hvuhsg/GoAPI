@@ -20,16 +20,7 @@ func GoAPI(title string) *App {
 func (a *App) registerViews(mux *http.ServeMux) {
 	// Register each view's path to the corresponding HTTP handler function
 	for path, view := range a.views {
-		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
-			if view.validMethod(r) {
-				gReq := NewRequest(r)
-				view.action(gReq)
-				w.WriteHeader(200)
-				w.Write([]byte("hello"))
-			} else {
-				http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
-			}
-		})
+		mux.HandleFunc(path, view.requestHandler)
 	}
 }
 

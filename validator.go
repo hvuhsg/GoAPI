@@ -1,6 +1,8 @@
 package goapi
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Validator interface {
 	Validate(r *Request, paramName string) error
@@ -19,18 +21,17 @@ func (VRequired) Validate(r *Request, paramName string) error {
 
 type VIsString struct{}
 
-func (VIsString) Validate(r *Request, paramName string) error {
-	vr := VRequired{}
-	err := vr.Validate(r, paramName)
-	if err != nil {
-		return err
-	}
+func (VIsString) Validate(r *Request, paramName string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("parameter %s must be of type 'string'", paramName)
+		}
+	}()
 
-	value := r.parameters[paramName]
+	_, ok := r.parameters[paramName]
 
-	_, ok := value.(string)
-	if !ok {
-		return fmt.Errorf("parameter %s must be of type 'string'", paramName)
+	if ok {
+		r.GetString(paramName)
 	}
 
 	return nil
@@ -38,16 +39,17 @@ func (VIsString) Validate(r *Request, paramName string) error {
 
 type VIsInt struct{}
 
-func (VIsInt) Validate(r *Request, paramName string) error {
-	vr := VRequired{}
-	err := vr.Validate(r, paramName)
-	if err != nil {
-		return err
-	}
+func (VIsInt) Validate(r *Request, paramName string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("parameter %s must be of type 'int'", paramName)
+		}
+	}()
 
-	_, ok := r.parameters[paramName].(int)
-	if !ok {
-		return fmt.Errorf("parameter %s must be of type 'int'", paramName)
+	_, ok := r.parameters[paramName]
+
+	if ok {
+		r.GetInt(paramName)
 	}
 
 	return nil
@@ -55,16 +57,17 @@ func (VIsInt) Validate(r *Request, paramName string) error {
 
 type VIsFloat struct{}
 
-func (VIsFloat) Validate(r *Request, paramName string) error {
-	vr := VRequired{}
-	err := vr.Validate(r, paramName)
-	if err != nil {
-		return err
-	}
+func (VIsFloat) Validate(r *Request, paramName string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("parameter %s must be of type 'float'", paramName)
+		}
+	}()
 
-	_, ok := r.parameters[paramName].(float64)
-	if !ok {
-		return fmt.Errorf("parameter %s must be of type 'float'", paramName)
+	_, ok := r.parameters[paramName]
+
+	if ok {
+		r.GetFloat(paramName)
 	}
 
 	return nil
@@ -72,16 +75,17 @@ func (VIsFloat) Validate(r *Request, paramName string) error {
 
 type VIsBool struct{}
 
-func (VIsBool) Validate(r *Request, paramName string) error {
-	vr := VRequired{}
-	err := vr.Validate(r, paramName)
-	if err != nil {
-		return err
-	}
+func (VIsBool) Validate(r *Request, paramName string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("parameter %s must be of type 'bool'", paramName)
+		}
+	}()
 
-	_, ok := r.parameters[paramName].(bool)
-	if !ok {
-		return fmt.Errorf("parameter %s must be of type 'bool'", paramName)
+	_, ok := r.parameters[paramName]
+
+	if ok {
+		r.GetBool(paramName)
 	}
 
 	return nil
@@ -89,16 +93,17 @@ func (VIsBool) Validate(r *Request, paramName string) error {
 
 type VIsArray struct{}
 
-func (VIsArray) Validate(r *Request, paramName string) error {
-	vr := VRequired{}
-	err := vr.Validate(r, paramName)
-	if err != nil {
-		return err
-	}
+func (VIsArray) Validate(r *Request, paramName string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("parameter %s must be of type 'array'", paramName)
+		}
+	}()
 
-	_, ok := r.parameters[paramName].([]interface{})
-	if !ok {
-		return fmt.Errorf("parameter %s must be of type 'array'", paramName)
+	_, ok := r.parameters[paramName]
+
+	if ok {
+		r.GetArray(paramName)
 	}
 
 	return nil
@@ -106,16 +111,17 @@ func (VIsArray) Validate(r *Request, paramName string) error {
 
 type VIsMap struct{}
 
-func (VIsMap) Validate(r *Request, paramName string) error {
-	vr := VRequired{}
-	err := vr.Validate(r, paramName)
-	if err != nil {
-		return err
-	}
+func (VIsMap) Validate(r *Request, paramName string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("parameter %s must be of type 'map'", paramName)
+		}
+	}()
 
-	_, ok := r.parameters[paramName].(map[string]interface{})
-	if !ok {
-		return fmt.Errorf("parameter %s must be of type 'map'", paramName)
+	_, ok := r.parameters[paramName]
+
+	if ok {
+		r.GetMap(paramName)
 	}
 
 	return nil
@@ -133,7 +139,7 @@ func (v VStringLength) Validate(r *Request, paramName string) error {
 		return err
 	}
 
-	strValue, _ := r.parameters[paramName].(string)
+	strValue := r.GetString(paramName)
 
 	if len(strValue) < v.Min || len(strValue) > v.Max {
 		return fmt.Errorf("parameter %s length must be between %d and %d characters", paramName, v.Min, v.Max)
@@ -148,23 +154,13 @@ type VRange struct {
 }
 
 func (v VRange) Validate(r *Request, paramName string) error {
-	vr := VRequired{}
+	vr := VIsFloat{}
 	err := vr.Validate(r, paramName)
 	if err != nil {
 		return err
 	}
 
-	val := r.parameters[paramName]
-	var fVal float64
-
-	switch val := val.(type) {
-	case int:
-		fVal = float64(val)
-	case float64:
-		fVal = val
-	default:
-		return fmt.Errorf("parameter %s must be a numeric value", paramName)
-	}
+	fVal := r.GetFloat(paramName)
 
 	if fVal < v.Min || fVal > v.Max {
 		return fmt.Errorf("parameter %s must be between %f and %f", paramName, v.Min, v.Max)
