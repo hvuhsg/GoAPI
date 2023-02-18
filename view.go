@@ -1,6 +1,7 @@
 package goapi
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -77,6 +78,15 @@ func (v *View) isValidRequest(r *Request) (bool, error) {
 }
 
 func (v *View) requestHandler(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		// If paniced responde with 500 internal server error
+		// TODO: log on DEBUG MODE
+		if r := recover(); r != nil {
+			fmt.Printf("ERROR: %v\n", r)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+	}()
+
 	if !v.validMethod(r) {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
@@ -92,7 +102,6 @@ func (v *View) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := v.action(req)
-	w.WriteHeader(200)
 	w.Header().Add("Content-Type", response.contentType())
 	w.Write(response.toBytes())
 }

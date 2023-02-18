@@ -26,6 +26,9 @@ func (JsonResponse) contentType() string {
 }
 
 func (jr JsonResponse) toBytes() []byte {
-	bytes, _ := json.Marshal(jr)
+	bytes, err := json.Marshal(jr)
+	if err != nil {
+		panic(err)
+	}
 	return bytes
 }
