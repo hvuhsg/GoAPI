@@ -17,19 +17,17 @@ To use GoAPI, you need to import it in your Go code and create a new instance of
 ```go
 import "github.com/hvuhsg/GoAPI"
 
-app := goapi.GoAPI()
+app := goapi.GoAPI("example", "1.0v")
+app.Description("Example app")                           // optional
+app.TermOfServiceURL("www.example.com/term_of_service")  // optional
+app.Contact("yoyo", "example.com", "goapi@example.com")  // optional
 ```
 
-Once you have created the app instance, you can add routes to it by calling the Path() method and specifying the route path. You can also set the HTTP methods that the route supports using the Methods() method. Here is an example of a route that supports GET and POST methods:
+Once you have created the app instance, you can add routes to it by calling the Path() method and specifying the route path. You can also set the HTTP methods that the route supports using the Methods() method. Here is an example of a routes that support GET method:
 
 ```go
-app := goapi.GoAPI("example", "1.0v")
-app.Description("Example app")
-app.TermOfServiceURL("www.example.com/term_of_service")
-app.Contact("yoyo", "example.com", "goapi@example.com")
-
 add := app.Path("/add")
-add.Tags("math")
+add.Tags("math")  // optional
 add.Methods(goapi.GET)
 add.Description("Add two numbers")
 add.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
@@ -39,8 +37,8 @@ add.Action(func(request *goapi.Request) goapi.Response {
 })
 
 sub := app.Path("/sub")
-sub.Deprecated() // deprecated route
-sub.Tags("math", "deprecated")
+sub.Deprecated()                // mark as deprecated route
+sub.Tags("math", "deprecated")  // optional
 sub.Methods(goapi.GET)
 add.Description("Subtruct two numbers (a - b)")
 add.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
