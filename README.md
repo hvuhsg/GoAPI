@@ -29,7 +29,7 @@ app.TermOfServiceURL("www.example.com/term_of_service")
 app.Contact("yoyo", "example.com", "goapi@example.com")
 
 add := app.Path("/add")
-sub.Tags("math")
+add.Tags("math")
 add.Methods(goapi.GET)
 add.Description("Add two numbers")
 add.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
@@ -97,3 +97,8 @@ func (v VRange) Validate(r *Request, paramName string) error {
 GoAPI can automatically generate API documentation in OpenAPI format (version 3). This makes it easy to share your API with others and integrate it with other tools that support OpenAPI.
 
 To generate the API documentation, you can simply visit the "/docs" endpoint in your web browser. This will display a user-friendly interface that allows you to view the API schema and test the API endpoints.
+For the JSON schema you can visit "/openapi.json".  
+
+
+![Swagger UI](/docs/images/openapi_closed.png)
+![Swagger route open](/docs/images/openapi_open.png)

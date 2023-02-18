@@ -92,35 +92,37 @@ func TestRunApp(t *testing.T) {
 }
 
 func TestOpenAPISchema(t *testing.T) {
-	app := goapi.GoAPI("test", "1.0")
-	app.Description("App for testing")
+	app := goapi.GoAPI("example", "1.0v")
+	app.Description("Example app")
 	app.TermOfServiceURL("www.example.com/term_of_service")
 	app.Contact("yoyo", "example.com", "goapi@example.com")
 
-	ping := app.Path("/ping")
-	ping.Methods(goapi.GET)
-	ping.Description("ping pong")
-	ping.Parameter("age", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 5, Max: 25})
-	ping.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.JsonResponse{"age": request.GetInt("age")}
+	add := app.Path("/add")
+	add.Tags("math")
+	add.Methods(goapi.GET)
+	add.Description("Add two numbers")
+	add.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
+	add.Parameter("b", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
+	add.Action(func(request *goapi.Request) goapi.Response {
+		return goapi.JsonResponse{"sum": request.GetInt("a") + request.GetInt("b")}
 	})
 
-	pong := app.Path("/pong/{age}/{password}")
-	pong.Deprecated()
-	pong.Tags("pong", "bla")
-	pong.Methods(goapi.PATCH)
-	pong.Description("bla bla")
-	pong.Parameter("age", goapi.PATH, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 5, Max: 25})
-	pong.Parameter("password", goapi.PATH, goapi.VRequired{}, goapi.VStringLength{Min: 3, Max: 12})
-	pong.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.JsonResponse{"age": request.GetInt("age"), "password": request.GetString("password")}
+	sub := app.Path("/sub")
+	sub.Deprecated() // deprecated route
+	sub.Tags("math", "deprecated")
+	sub.Methods(goapi.GET)
+	add.Description("Subtruct two numbers (a - b)")
+	add.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
+	add.Parameter("b", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
+	add.Action(func(request *goapi.Request) goapi.Response {
+		return goapi.JsonResponse{"result": request.GetInt("a") - request.GetInt("b")}
 	})
 
-	go app.Run("127.0.0.1", 8081)
+	app.Run("127.0.0.1", 8081)
 
 	time.Sleep(time.Millisecond * 200)
 
-	resp, err := http.Get("http://127.0.0.1:8081/docs")
+	resp, err := http.Get("http://127.0.0.1:8081/openapi.json")
 
 	if err != nil {
 		t.Error("not expecting error")

@@ -107,7 +107,7 @@ func (a *App) registerViews(mux *http.ServeMux) {
 func (a *App) registerInternalViews(mux *http.ServeMux) {
 	// Docs internal view, retunrs the OpenAPI-3 schmea
 	schema, schemaErr := a.openapi3Schema() // Only marshel on startup for performence
-	mux.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/openapi.json", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 			return
@@ -118,7 +118,45 @@ func (a *App) registerInternalViews(mux *http.ServeMux) {
 			return
 		}
 
+		w.Header().Add("Content-Type", "application/json")
 		w.Write(schema)
+	})
+
+	mux.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
+		swaggerJsUrl := "https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui-bundle.js"
+		swaggerCssUrl := "https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui.css"
+		swaggerFavIconUrl := "https://fastapi.tiangolo.com/img/favicon.png"
+		html := fmt.Sprintf(`
+		<!DOCTYPE html>
+		<html>
+		<head>
+		<link type="text/css" rel="stylesheet" href="%s">
+		<link rel="shortcut icon" href="%s">
+		<title>%s</title>
+		</head>
+		<body>
+		<div id="swagger-ui">
+		</div>
+		<script src="%s"></script>
+		<script>
+		const ui = SwaggerUIBundle({
+			url: '%s',
+			dom_id: '#swagger-ui',
+			presets: [
+				SwaggerUIBundle.presets.apis,
+				SwaggerUIBundle.SwaggerUIStandalonePreset
+			],
+			layout: "BaseLayout",
+			deepLinking: true,
+			showExtensions: true,
+			showCommonExtensions: true
+		})
+		</script>
+		</body>
+		</html>
+		`, swaggerCssUrl, swaggerFavIconUrl, a.title, swaggerJsUrl, "/openapi.json")
+		w.Header().Add("Content-Type", "text/html")
+		w.Write([]byte(html))
 	})
 }
 
