@@ -2,14 +2,18 @@ package goapi
 
 import (
 	"fmt"
+
+	"github.com/getkin/kin-openapi/openapi3"
 )
 
 type Validator interface {
 	Validate(r *Request, paramName string) error
+	updateOpenAPISchema(schema *openapi3.Schema)
 }
 
 type VRequired struct{}
 
+func (v VRequired) updateOpenAPISchema(schema *openapi3.Schema) {}
 func (VRequired) Validate(r *Request, paramName string) error {
 	_, ok := r.parameters[paramName]
 	if !ok {
@@ -21,6 +25,7 @@ func (VRequired) Validate(r *Request, paramName string) error {
 
 type VIsString struct{}
 
+func (v VIsString) updateOpenAPISchema(schema *openapi3.Schema) { schema.Type = "string" }
 func (VIsString) Validate(r *Request, paramName string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -39,6 +44,10 @@ func (VIsString) Validate(r *Request, paramName string) (err error) {
 
 type VIsInt struct{}
 
+func (v VIsInt) updateOpenAPISchema(schema *openapi3.Schema) {
+	schema.Type = "integer"
+	schema.Format = "int64"
+}
 func (VIsInt) Validate(r *Request, paramName string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -57,6 +66,10 @@ func (VIsInt) Validate(r *Request, paramName string) (err error) {
 
 type VIsFloat struct{}
 
+func (v VIsFloat) updateOpenAPISchema(schema *openapi3.Schema) {
+	schema.Type = "number"
+	schema.Format = "float"
+}
 func (VIsFloat) Validate(r *Request, paramName string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -75,6 +88,7 @@ func (VIsFloat) Validate(r *Request, paramName string) (err error) {
 
 type VIsBool struct{}
 
+func (v VIsBool) updateOpenAPISchema(schema *openapi3.Schema) { schema.Type = "boolean" }
 func (VIsBool) Validate(r *Request, paramName string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -93,6 +107,7 @@ func (VIsBool) Validate(r *Request, paramName string) (err error) {
 
 type VIsArray struct{}
 
+func (v VIsArray) updateOpenAPISchema(schema *openapi3.Schema) { schema.Type = "array" }
 func (VIsArray) Validate(r *Request, paramName string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -111,6 +126,7 @@ func (VIsArray) Validate(r *Request, paramName string) (err error) {
 
 type VIsMap struct{}
 
+func (v VIsMap) updateOpenAPISchema(schema *openapi3.Schema) { schema.Type = "object" }
 func (VIsMap) Validate(r *Request, paramName string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -132,6 +148,12 @@ type VStringLength struct {
 	Max int
 }
 
+func (v VStringLength) updateOpenAPISchema(schema *openapi3.Schema) {
+	VIsString{}.updateOpenAPISchema(schema)
+	schema.MinLength = uint64(v.Min)
+	maxL := uint64(v.Max)
+	schema.MaxLength = &maxL
+}
 func (v VStringLength) Validate(r *Request, paramName string) error {
 	vr := VIsString{}
 	err := vr.Validate(r, paramName)
@@ -153,6 +175,10 @@ type VRange struct {
 	Max float64
 }
 
+func (v VRange) updateOpenAPISchema(schema *openapi3.Schema) {
+	schema.Min = &v.Min
+	schema.Max = &v.Max
+}
 func (v VRange) Validate(r *Request, paramName string) error {
 	vr := VIsFloat{}
 	err := vr.Validate(r, paramName)

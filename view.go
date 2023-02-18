@@ -29,11 +29,25 @@ var methodStringToCode = map[string]int{
 	"TRACE":   TRACE,
 }
 
+var methodCodeToString = map[int]string{
+	GET:     "GET",
+	POST:    "POST",
+	PATCH:   "PATCH",
+	DELETE:  "DELETE",
+	PUT:     "PUT",
+	HEAD:    "HEAD",
+	OPTIONS: "OPTIONS",
+	CONNECT: "CONNECT",
+	TRACE:   "TRACE",
+}
+
 type View struct {
 	path        string
 	methods     map[int]struct{}
 	parameters  map[string]Parameter
 	description string
+	tags        []string
+	depreceted  bool
 	action      func(request *Request) Response
 }
 
@@ -43,6 +57,8 @@ func NewView(path string) *View {
 	view.methods = make(map[int]struct{})
 	view.parameters = make(map[string]Parameter)
 	view.description = ""
+	view.tags = make([]string, 0)
+	view.depreceted = false
 	view.action = nil
 	return view
 }
@@ -106,6 +122,17 @@ func (v *View) requestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(response.toBytes())
 }
 
+// Mark view as deprecated
+func (v *View) Deprecated() *View {
+	v.depreceted = true
+	return v
+}
+
+func (v *View) Tags(tags ...string) *View {
+	v.tags = tags
+	return v
+}
+
 func (v *View) Methods(methods ...int) *View {
 	for method := range methods {
 		v.methods[method] = struct{}{}
@@ -119,10 +146,10 @@ func (v *View) Description(description string) *View {
 	return v
 }
 
-func (v *View) Parameter(paramName string, validators ...Validator) *View {
+func (v *View) Parameter(paramName string, in string, validators ...Validator) *View {
 	v.requireMethods()
 	v.requireDescription()
-	v.parameters[paramName] = NewParameter(paramName, validators)
+	v.parameters[paramName] = NewParameter(paramName, in, validators)
 	return v
 }
 
