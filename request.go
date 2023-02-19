@@ -146,7 +146,6 @@ func (r *Request) GetArray(name string) []interface{} {
 		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
 
-	fmt.Printf("%t\n", val)
 	switch v := val.(type) {
 	case []interface{}:
 		return v
