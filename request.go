@@ -146,9 +146,15 @@ func (r *Request) GetArray(name string) []interface{} {
 		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
 
+	fmt.Printf("%t\n", val)
 	switch v := val.(type) {
 	case []interface{}:
 		return v
+	case []string:
+		fmt.Println("its string array")
+		anyArr := make([]any, len(v))
+		anyArr = append(anyArr, v)
+		return anyArr
 	default:
 		panic(fmt.Sprintf("parameter '%s' is not an array", name))
 	}
