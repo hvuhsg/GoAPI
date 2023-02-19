@@ -151,7 +151,6 @@ func (r *Request) GetArray(name string) []interface{} {
 	case []interface{}:
 		return v
 	case []string:
-		fmt.Println("its string array")
 		anyArr := make([]any, len(v))
 		anyArr = append(anyArr, v)
 		return anyArr

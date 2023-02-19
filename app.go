@@ -7,15 +7,19 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
+// App represents the main application.
 type App struct {
 	title            string
 	version          string
 	description      string
 	termOfServiceURL string
 	contact          openapi3.Contact
-	views            map[string]*View
+	views            map[string]*View // A map of View objects keyed by their URL paths
+	openapiDocsURL   string           // URL path for the OpenAPI documentation
+	openapiSchemaURL string           // URL path for the OpenAPI schema
 }
 
+// GoAPI creates a new instance of the App.
 func GoAPI(title string, version string) *App {
 	app := new(App)
 	app.title = title
@@ -24,158 +28,53 @@ func GoAPI(title string, version string) *App {
 	app.termOfServiceURL = ""
 	app.contact = openapi3.Contact{}
 	app.views = make(map[string]*View)
+	app.openapiDocsURL = "/docs"
+	app.openapiSchemaURL = "/openapi.json"
 	return app
 }
 
-func (a *App) openapi3Schema() ([]byte, error) {
-	paths := make(openapi3.Paths)
-
-	for _, view := range a.views {
-		path, ok := paths[view.path]
-		if !ok {
-			path = &openapi3.PathItem{}
-		}
-
-		for method := range view.methods {
-			methodString := methodCodeToString[method]
-			parameters := make(openapi3.Parameters, 0)
-
-			for paramName, paramInfo := range view.parameters {
-				schemaVal := openapi3.NewSchema()
-				required := false
-
-				for _, validator := range paramInfo.validators {
-					_, ok = validator.(VRequired)
-					if ok {
-						required = true
-					}
-
-					validator.updateOpenAPISchema(schemaVal)
-				}
-
-				paramRef := openapi3.ParameterRef{Value: &openapi3.Parameter{
-					Name:       paramName,
-					In:         paramInfo.in,
-					Required:   required,
-					Schema:     openapi3.NewSchemaRef("", schemaVal),
-					Deprecated: false,
-				}}
-				parameters = append(parameters, &paramRef)
-			}
-
-			responses := openapi3.NewResponses()
-
-			// Set default validation error response
-			respDesc := "Error when validating request against validators"
-			responses["422"] = &openapi3.ResponseRef{Value: &openapi3.Response{Description: &respDesc}}
-
-			operation := openapi3.Operation{
-				Description: view.description,
-				Tags:        view.tags,
-				Parameters:  parameters,
-				Responses:   responses,
-				Deprecated:  view.depreceted,
-			}
-			path.SetOperation(methodString, &operation)
-		}
-
-		paths[view.path] = path
-	}
-
-	schemaObj := openapi3.T{
-		OpenAPI: "3.0.0",
-		Info: &openapi3.Info{
-			Title:          a.title,
-			Version:        a.version,
-			Description:    a.description,
-			TermsOfService: a.termOfServiceURL,
-			Contact:        &a.contact,
-		},
-		Paths: paths,
-	}
-
-	return schemaObj.MarshalJSON()
-}
-
+// registerViews registers each View's path to its corresponding HTTP handler function.
 func (a *App) registerViews(mux *http.ServeMux) {
-	// Register each view's path to the corresponding HTTP handler function
 	for path, view := range a.views {
 		mux.HandleFunc(path, view.requestHandler)
 	}
 }
 
+// registerInternalViews registers internal views, such as the OpenAPI documentation route.
 func (a *App) registerInternalViews(mux *http.ServeMux) {
-	// Docs internal view, retunrs the OpenAPI-3 schmea
-	schema, schemaErr := a.openapi3Schema() // Only marshel on startup for performence
-	mux.HandleFunc("/openapi.json", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
-			return
-		}
-
-		if schemaErr != nil {
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Add("Content-Type", "application/json")
-		w.Write(schema)
-	})
-
-	mux.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
-		swaggerJsUrl := "https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui-bundle.js"
-		swaggerCssUrl := "https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui.css"
-		swaggerFavIconUrl := "https://fastapi.tiangolo.com/img/favicon.png"
-		html := fmt.Sprintf(`
-		<!DOCTYPE html>
-		<html>
-		<head>
-		<link type="text/css" rel="stylesheet" href="%s">
-		<link rel="shortcut icon" href="%s">
-		<title>%s</title>
-		</head>
-		<body>
-		<div id="swagger-ui">
-		</div>
-		<script src="%s"></script>
-		<script>
-		const ui = SwaggerUIBundle({
-			url: '%s',
-			dom_id: '#swagger-ui',
-			presets: [
-				SwaggerUIBundle.presets.apis,
-				SwaggerUIBundle.SwaggerUIStandalonePreset
-			],
-			layout: "BaseLayout",
-			deepLinking: true,
-			showExtensions: true,
-			showCommonExtensions: true
-		})
-		</script>
-		</body>
-		</html>
-		`, swaggerCssUrl, swaggerFavIconUrl, a.title, swaggerJsUrl, "/openapi.json")
-		w.Header().Add("Content-Type", "text/html")
-		w.Write([]byte(html))
-	})
+	registerDocs(a, mux) // register OpenAPI documentation route
 }
 
+// Description sets the application description.
 func (a *App) Description(description string) {
 	a.description = description
 }
 
+// TermOfServiceURL sets the URL for the application's terms of service.
 func (a *App) TermOfServiceURL(termOfServiceURL string) {
 	a.termOfServiceURL = termOfServiceURL
 }
 
+// Contact sets the application's contact information.
 func (a *App) Contact(name string, url string, email string) {
 	a.contact = openapi3.Contact{Name: name, URL: url, Email: email}
 }
 
+// OpenapiDocsURL sets the URL path for the OpenAPI documentation.
+func (a *App) OpenapiDocsURL(docsUrl string) {
+	a.openapiDocsURL = docsUrl
+}
+
+// OpenapiSchemaURL sets the URL path for the OpenAPI schema.
+func (a *App) OpenapiSchemaURL(schemaUrl string) {
+	a.openapiSchemaURL = schemaUrl
+}
+
+// Path creates a new View for the given URL path and adds it to the App.
 func (a *App) Path(path string) *View {
 	_, ok := a.views[path]
 	if ok {
-		panic(fmt.Sprintf("path %s already registred", path))
+		panic(fmt.Sprintf("path %s already registered", path))
 	}
 
 	view := NewView(path)
@@ -184,6 +83,7 @@ func (a *App) Path(path string) *View {
 	return view
 }
 
+// Run starts the application and listens for incoming requests.
 func (a *App) Run(host string, port int) error {
 	mux := http.NewServeMux()
 	a.registerViews(mux)

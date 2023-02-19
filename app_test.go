@@ -1,7 +1,6 @@
 package goapi_test
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"testing"
@@ -118,7 +117,7 @@ func TestOpenAPISchema(t *testing.T) {
 		return goapi.JsonResponse{"result": request.GetInt("a") - request.GetInt("b")}
 	})
 
-	app.Run("127.0.0.1", 8081)
+	go app.Run("127.0.0.1", 8081)
 
 	time.Sleep(time.Millisecond * 200)
 
@@ -131,9 +130,4 @@ func TestOpenAPISchema(t *testing.T) {
 	if resp.StatusCode != 200 {
 		t.Errorf("expecting status-code 200 got %d", resp.StatusCode)
 	}
-
-	respBody, _ := io.ReadAll(resp.Body)
-	respString := string(respBody[:])
-
-	fmt.Println(respString)
 }
