@@ -45,6 +45,15 @@ func NewRequest(req *http.Request) *Request {
 		}
 	}
 
+	// Parse headers
+	for k, v := range req.Header {
+		if len(v) == 1 {
+			params[k] = v[0]
+		} else {
+			params[k] = v
+		}
+	}
+
 	// Parse body params
 	decoder := json.NewDecoder(req.Body)
 	var bodyParams interface{}

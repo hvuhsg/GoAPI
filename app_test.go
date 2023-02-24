@@ -94,6 +94,7 @@ func TestOpenAPISchema(t *testing.T) {
 	app := goapi.GoAPI("example", "1.0v")
 	app.Description("Example app")
 	app.TermOfServiceURL("www.example.com/term_of_service")
+	app.License("MIT", "")
 	app.Contact("yoyo", "example.com", "goapi@example.com")
 	app.Tag("math", "math operations")
 	app.Tag("deprecated", "deprecated operations")

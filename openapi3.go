@@ -80,11 +80,13 @@ func openapi3Schema(a *App) ([]byte, error) {
 			Title:          a.title,
 			Version:        a.version,
 			Description:    a.description,
+			License:        &a.license,
 			TermsOfService: a.termOfServiceURL,
 			Contact:        &a.contact,
 		},
-		Tags:  a.tags,
-		Paths: paths,
+		Security: a.security,
+		Tags:     a.tags,
+		Paths:    paths,
 	}
 
 	// Marshal the OpenAPI-3 schema object to JSON and return it
