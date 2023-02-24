@@ -83,6 +83,7 @@ func openapi3Schema(a *App) ([]byte, error) {
 			TermsOfService: a.termOfServiceURL,
 			Contact:        &a.contact,
 		},
+		Tags:  a.tags,
 		Paths: paths,
 	}
 

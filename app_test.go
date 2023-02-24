@@ -95,6 +95,8 @@ func TestOpenAPISchema(t *testing.T) {
 	app.Description("Example app")
 	app.TermOfServiceURL("www.example.com/term_of_service")
 	app.Contact("yoyo", "example.com", "goapi@example.com")
+	app.Tag("math", "math operations")
+	app.Tag("deprecated", "deprecated operations")
 
 	add := app.Path("/add")
 	add.Tags("math")

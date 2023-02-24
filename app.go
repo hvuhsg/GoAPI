@@ -14,6 +14,7 @@ type App struct {
 	description      string
 	termOfServiceURL string
 	contact          openapi3.Contact
+	tags             openapi3.Tags
 	views            map[string]*View // A map of View objects keyed by their URL paths
 	openapiDocsURL   string           // URL path for the OpenAPI documentation
 	openapiSchemaURL string           // URL path for the OpenAPI schema
@@ -27,6 +28,7 @@ func GoAPI(title string, version string) *App {
 	app.description = ""
 	app.termOfServiceURL = ""
 	app.contact = openapi3.Contact{}
+	app.tags = openapi3.Tags{}
 	app.views = make(map[string]*View)
 	app.openapiDocsURL = "/docs"
 	app.openapiSchemaURL = "/openapi.json"
@@ -58,6 +60,10 @@ func (a *App) TermOfServiceURL(termOfServiceURL string) {
 // Contact sets the application's contact information.
 func (a *App) Contact(name string, url string, email string) {
 	a.contact = openapi3.Contact{Name: name, URL: url, Email: email}
+}
+
+func (a *App) Tag(name string, description string) {
+	a.tags = append(a.tags, &openapi3.Tag{Name: name, Description: description})
 }
 
 // OpenapiDocsURL sets the URL path for the OpenAPI documentation.
