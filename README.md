@@ -21,6 +21,13 @@
 GoAPI is a web framework written in Go that is inspired by FastAPI. It allows you to quickly build and deploy RESTful APIs with minimal effort. The framework comes with built-in validators that can be used to validate and auto-build the API schema with OpenAPI format (version 3). This means you can focus on the main logic of your application while the framework handles the validation and API documentation generation.  
 
 
+The key features are:
+- [**automatic docs**](#api-documentation)
+- [**extensible validators system**](#validation)
+- [**high level syntax**](#usage)
+- [**middlewares** support](#middlewares)
+- [**native handlers** support](#native-handlers)
+
 ## Quick Start
 ### Install
 To install GoAPI, you need to have Go version 1.13 or higher installed on your system. Once you have installed Go, you can use the following command to install GoAPI:
@@ -93,16 +100,11 @@ GoAPI comes with built-in validators that can be used to validate input data aut
 
 If the input data fails validation, the framework will automatically return an error to the client. This means you can focus on the main logic of your application, and the framework will handle the validation for you.
 
-Adding a custom validator is very easy, just implement the Validator interfce:
+Here is a validator for example
 <details>
-<summary>Validator interface</summary>
+<summary>See validator</summary>
 
 ```go
-type Validator interface {
-	Validate(r *Request, paramName string) error
-	updateOpenAPISchema(schema *openapi3.Schema)
-}
-
 // VRange implementaion for refernce
 type VRange struct {
 	Min float64
@@ -130,6 +132,84 @@ func (v VRange) Validate(r *Request, paramName string) error {
 }
 ```
 </details>
+
+## Middlewares
+GoAPI supports middlewares, middlewares can be defind in the app level or in the view level, middlewares in the app level are applied to all views.
+
+here is an example for logging middleware, that logs requests in the format that nginx uses.
+<details>
+<summary>See middleware</summary>
+
+```go
+type SimpleLoggingMiddleware struct{}
+
+func (SimpleLoggingMiddleware) Apply(next AppHandler) AppHandler {
+	return func(request *Request) Response {
+		response := next(request)
+
+		scheme := "http"
+		if request.HTTPRequest.TLS != nil {
+			scheme = "https"
+		}
+		fullURL := fmt.Sprintf("%s://%s%s", scheme, request.HTTPRequest.Host, request.HTTPRequest.URL.String())
+
+		method := request.HTTPRequest.Method
+		path := request.HTTPRequest.URL.Path
+		responseSize := len(response.toBytes())
+		remoteAddr := request.HTTPRequest.RemoteAddr
+		date := time.Now().Format("2006-01-02 15:04:05")
+		userAgent := request.HTTPRequest.UserAgent()
+
+		// TODO: FIX status code
+		fmt.Printf("%s - - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"\n", remoteAddr, date, method, path, request.HTTPRequest.Proto, 200, responseSize, fullURL, userAgent)
+		return response
+	}
+}
+
+```
+</details>
+
+To apply middlewares simply pass it to the Middlewares method for the app or for the view.
+
+```go
+package main
+
+import (
+	"net/http"
+
+	"github.com/hvuhsg/goapi"
+)
+
+func main() {
+	app := goapi.GoAPI("external handler", "1.0v")
+	app.Middlewares(goapi.SimpleLoggingMiddleware{})
+}
+```
+
+## Native handlers
+To allow the usage of native handlers we added a simple way to include them in the app, simply pass the native Handler into the Include method of the app.
+
+Note that native handlers will not be shown in the automatic docs, and currently will not be affected by the middlewares.
+
+here is an example:
+```go
+package main
+
+import (
+	"net/http"
+
+	"github.com/hvuhsg/goapi"
+)
+
+func main() {
+	app := goapi.GoAPI("external handler", "1.0v")
+
+	// Serve files from GoAPI app using the Include method that allow us to include external handlers in the app
+	app.Include("/", http.FileServer(http.Dir(".")))
+
+	app.Run("127.0.0.1", 8080)
+}
+```
 
 ## API Documentation
 GoAPI can automatically generate API documentation in OpenAPI format (version 3). This makes it easy to share your API with others and integrate it with other tools that support OpenAPI.
