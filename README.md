@@ -22,11 +22,11 @@ GoAPI is a web framework written in Go that is inspired by FastAPI. It allows yo
 
 
 The key features are:
-- [**automatic docs**](#api-documentation)
-- [**extensible validators system**](#validation)
-- [**high level syntax**](#usage)
-- [**middlewares** support](#middlewares)
-- [**native handlers** support](#native-handlers)
+- **automatic docs** [---->](#api-documentation)
+- **extensible validators system** [---->](#validation)
+- **high level syntax** [---->](#usage)
+- **middlewares** support [---->](#middlewares)
+- **native handlers** support [---->](#native-handlers)
 
 ## Quick Start
 ### Install
