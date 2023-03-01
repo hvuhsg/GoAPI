@@ -4,6 +4,7 @@ import "github.com/hvuhsg/goapi"
 
 func main() {
 	app := goapi.GoAPI("small", "1.0v")
+	app.Middlewares(goapi.SimpleLoggingMiddleware{})
 
 	echo := app.Path("/echo")
 	echo.Methods(goapi.GET)

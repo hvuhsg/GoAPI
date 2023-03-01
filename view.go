@@ -48,6 +48,7 @@ type View struct {
 	description string
 	tags        []string
 	depreceted  bool
+	middlewares []middleware
 	action      func(request *Request) Response
 }
 
@@ -59,6 +60,7 @@ func NewView(path string) *View {
 	view.description = ""
 	view.tags = make([]string, 0)
 	view.depreceted = false
+	view.middlewares = make([]middleware, 0)
 	view.action = nil
 	return view
 }
@@ -93,9 +95,23 @@ func (v *View) isValidRequest(r *Request) (bool, error) {
 	return true, nil
 }
 
+func (v *View) applyMiddlewares(appMiddlewares ...middleware) {
+	// Apply app middlewares
+	for i := len(appMiddlewares) - 1; i >= 0; i-- {
+		m := appMiddlewares[i]
+		v.action = m.Apply(v.action)
+	}
+
+	// Apply view middlewares
+	for i := len(v.middlewares) - 1; i >= 0; i-- {
+		m := v.middlewares[i]
+		v.action = m.Apply(v.action)
+	}
+}
+
 func (v *View) requestHandler(w http.ResponseWriter, r *http.Request) {
 	defer func() {
-		// If paniced responde with 500 internal server error
+		// If paniced; responde with 500 internal server error
 		// TODO: log on DEBUG MODE
 		if r := recover(); r != nil {
 			fmt.Printf("ERROR: %v\n", r)
@@ -146,6 +162,10 @@ func (v *View) Description(description string) *View {
 	return v
 }
 
+func (v *View) Middlewares(middlewares ...middleware) {
+	v.middlewares = append(v.middlewares, middlewares...)
+}
+
 func (v *View) Parameter(paramName string, in string, validators ...Validator) *View {
 	v.requireMethods()
 	v.requireDescription()
@@ -153,9 +173,11 @@ func (v *View) Parameter(paramName string, in string, validators ...Validator) *
 	return v
 }
 
-func (v *View) Action(f func(request *Request) Response) {
+type AppHandler func(request *Request) Response
+
+func (v *View) Action(r AppHandler) {
 	v.requireMethods()
 	v.requireDescription()
 
-	v.action = f
+	v.action = r
 }

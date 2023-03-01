@@ -17,6 +17,8 @@ type App struct {
 	contact          openapi3.Contact
 	tags             openapi3.Tags
 	security         openapi3.SecurityRequirements
+	externalHandlers map[string]http.Handler
+	middlewares      []middleware
 	views            map[string]*View // A map of View objects keyed by their URL paths
 	openapiDocsURL   string           // URL path for the OpenAPI documentation
 	openapiSchemaURL string           // URL path for the OpenAPI schema
@@ -32,6 +34,8 @@ func GoAPI(title string, version string) *App {
 	app.license = openapi3.License{}
 	app.contact = openapi3.Contact{}
 	app.tags = openapi3.Tags{}
+	app.externalHandlers = make(map[string]http.Handler)
+	app.middlewares = make([]middleware, 0)
 	app.views = make(map[string]*View)
 	app.openapiDocsURL = "/docs"
 	app.openapiSchemaURL = "/openapi.json"
@@ -41,6 +45,7 @@ func GoAPI(title string, version string) *App {
 // registerViews registers each View's path to its corresponding HTTP handler function.
 func (a *App) registerViews(mux *http.ServeMux) {
 	for path, view := range a.views {
+		view.applyMiddlewares(a.middlewares...)
 		mux.HandleFunc(path, view.requestHandler)
 	}
 }
@@ -48,6 +53,12 @@ func (a *App) registerViews(mux *http.ServeMux) {
 // registerInternalViews registers internal views, such as the OpenAPI documentation route.
 func (a *App) registerInternalViews(mux *http.ServeMux) {
 	registerDocs(a, mux) // register OpenAPI documentation route
+}
+
+func (a *App) registerExternalHandlers(mux *http.ServeMux) {
+	for path, handler := range a.externalHandlers {
+		mux.Handle(path, handler)
+	}
 }
 
 // Description sets the application description.
@@ -83,6 +94,11 @@ func (a *App) Security(securiyProvider SecurityProvider) {
 	a.security = append(a.security, sec)
 }
 
+// Add middlewares to all routes
+func (a *App) Middlewares(middlewares ...middleware) {
+	a.middlewares = append(a.middlewares, middlewares...)
+}
+
 // Make security optional
 func (a *App) OptionalSecurity() {
 	sec := openapi3.NewSecurityRequirement()
@@ -101,6 +117,11 @@ func (a *App) OpenapiSchemaURL(schemaUrl string) {
 	a.openapiSchemaURL = schemaUrl
 }
 
+// Serve external handler under path
+func (a *App) Include(path string, handler http.Handler) {
+	a.externalHandlers[path] = handler
+}
+
 // Path creates a new View for the given URL path and adds it to the App.
 func (a *App) Path(path string) *View {
 	_, ok := a.views[path]
@@ -114,14 +135,22 @@ func (a *App) Path(path string) *View {
 	return view
 }
 
-// Run starts the application and listens for incoming requests.
-func (a *App) Run(host string, port int) error {
+// Access low lever mux router
+func (a *App) baseRouter() *http.ServeMux {
 	mux := http.NewServeMux()
 	a.registerViews(mux)
 	a.registerInternalViews(mux)
+	a.registerExternalHandlers(mux)
+	return mux
+}
+
+// Run starts the application and listens for incoming requests.
+func (a *App) Run(host string, port int) error {
+	mux := a.baseRouter()
 
 	addr := fmt.Sprintf("%s:%d", host, port)
 	fmt.Printf("Starting server at %s\n", addr)
+	fmt.Printf("Visit openapi docs at http://%s%s\n", addr, a.openapiDocsURL)
 
 	return http.ListenAndServe(addr, mux)
 }
