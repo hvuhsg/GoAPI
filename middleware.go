@@ -1,7 +1,9 @@
 package goapi
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -31,5 +33,33 @@ func (SimpleLoggingMiddleware) Apply(next AppHandler) AppHandler {
 
 		fmt.Printf("%s - - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"\n", remoteAddr, date, method, path, request.HTTPRequest.Proto, statusCode, responseSize, fullURL, userAgent)
 		return response
+	}
+}
+
+type TimeoutMiddleware struct {
+	Timeout time.Duration
+}
+
+func (tm TimeoutMiddleware) Apply(next AppHandler) AppHandler {
+	return func(request *Request) Response {
+		// Create a context with a timeout
+		ctx, cancel := context.WithTimeout(context.Background(), tm.Timeout)
+		defer cancel()
+
+		// Add context to the request
+		request.HTTPRequest = request.HTTPRequest.WithContext(ctx)
+
+		// Use a goroutine to execute the request and wait for it to complete or timeout
+		ch := make(chan Response, 1)
+		go func() {
+			ch <- next(request)
+		}()
+
+		select {
+		case response := <-ch:
+			return response
+		case <-ctx.Done():
+			return HtmlResponse{Content: "Request timed out", Code: http.StatusGatewayTimeout}
+		}
 	}
 }
