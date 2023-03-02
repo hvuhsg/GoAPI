@@ -2,7 +2,10 @@ module github.com/hvuhsg/goapi
 
 go 1.20
 
-require github.com/getkin/kin-openapi v0.114.0
+require (
+	github.com/getkin/kin-openapi v0.114.0
+	github.com/patrickmn/go-cache v2.1.0+incompatible
+)
 
 require (
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
