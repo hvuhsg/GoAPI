@@ -45,7 +45,7 @@ func GoAPI(title string, version string) *App {
 // registerViews registers each View's path to its corresponding HTTP handler function.
 func (a *App) registerViews(mux *http.ServeMux) {
 	for path, view := range a.views {
-		view.applyMiddlewares(a.middlewares...)
+		view.applyMiddlewares(a.middlewares)
 		mux.HandleFunc(path, view.requestHandler)
 	}
 }

@@ -95,7 +95,7 @@ func (v *View) isValidRequest(r *Request) (bool, error) {
 	return true, nil
 }
 
-func (v *View) applyMiddlewares(appMiddlewares ...middleware) {
+func (v *View) applyMiddlewares(appMiddlewares []middleware) {
 	// Apply app middlewares
 	for i := len(appMiddlewares) - 1; i >= 0; i-- {
 		m := appMiddlewares[i]
