@@ -112,13 +112,13 @@ func (v *View) applyMiddlewares(appMiddlewares []middleware) {
 func (v *View) requestHandler(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		// If paniced; responde with 500 internal server error
-		// TODO: log on DEBUG MODE
 		if r := recover(); r != nil {
 			fmt.Printf("ERROR: %v\n", r)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 	}()
 
+	// Check if request method is in allowed for this request
 	if !v.validMethod(r) {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
@@ -127,7 +127,6 @@ func (v *View) requestHandler(w http.ResponseWriter, r *http.Request) {
 	req := NewRequest(r)
 
 	isValid, err := v.isValidRequest(req)
-
 	if !isValid {
 		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 		return
