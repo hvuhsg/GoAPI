@@ -159,13 +159,12 @@ func (SimpleLoggingMiddleware) Apply(next AppHandler) AppHandler {
 		remoteAddr := request.HTTPRequest.RemoteAddr
 		date := time.Now().Format("2006-01-02 15:04:05")
 		userAgent := request.HTTPRequest.UserAgent()
+		statusCode := response.statusCode()
 
-		// TODO: FIX status code
-		fmt.Printf("%s - - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"\n", remoteAddr, date, method, path, request.HTTPRequest.Proto, 200, responseSize, fullURL, userAgent)
+		fmt.Printf("%s - - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"\n", remoteAddr, date, method, path, request.HTTPRequest.Proto, statusCode, responseSize, fullURL, userAgent)
 		return response
 	}
 }
-
 ```
 </details>
 
