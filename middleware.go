@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -76,4 +77,33 @@ func (TimingMiddleware) Apply(next AppHandler) AppHandler {
 
 		return response
 	}
+}
+
+type IPFilterMiddleware struct {
+	allowedIPs []string
+}
+
+func (ipm IPFilterMiddleware) Apply(next AppHandler) AppHandler {
+	return func(request *Request) Response {
+		clientIP := strings.Split(request.HTTPRequest.RemoteAddr, ":")[0]
+
+		// Check if the client IP is allowed
+		if !ipm.isAllowedIP(clientIP) {
+			return HtmlResponse{
+				Code:    http.StatusForbidden,
+				Content: "Access denied",
+			}
+		}
+
+		return next(request)
+	}
+}
+
+func (ipm IPFilterMiddleware) isAllowedIP(ip string) bool {
+	for _, allowedIP := range ipm.allowedIPs {
+		if allowedIP == ip {
+			return true
+		}
+	}
+	return false
 }
