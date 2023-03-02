@@ -27,6 +27,7 @@ The key features are:
 - **high level syntax** [---->](#usage)
 - **middlewares** support [---->](#middlewares)
 - **native handlers** support [---->](#native-handlers)
+- **SSL/TLS** support [---->](#https-support)
 
 ## Quick Start
 ### Install
@@ -219,3 +220,28 @@ For the JSON schema you can visit "/openapi.json".
 
 ![Swagger UI](/docs/images/openapi_closed.png)
 ![Swagger route open](/docs/images/openapi_open.png)
+
+## HTTPS Support
+GoAPI can also serve the api over https, this is not recommanded for production.
+We recommand using Nginx or other types of reverse proxy to handle the SSL/TLS security.
+
+To run the application over TLS just use the **RunTLS** method of the app.
+
+```go
+package main
+
+import "github.com/hvuhsg/goapi"
+
+func main() {
+	app := goapi.GoAPI("TLS example", "1.0v")
+
+	root := app.Path("/")
+	root.Methods(goapi.GET)
+	root.Description("simple route")
+	root.Action(func(request *goapi.Request) goapi.Response {
+		return goapi.HtmlResponse{Content: "<h1>HTML Over HTTPS</h1>", Code: 200}
+	})
+
+	app.RunTLS("127.0.0.1", 8080, "./server.crt", "./server.key")
+}
+```

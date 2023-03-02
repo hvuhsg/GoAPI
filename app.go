@@ -135,22 +135,37 @@ func (a *App) Path(path string) *View {
 	return view
 }
 
-// Access low lever mux router
+// Build mux router
 func (a *App) baseRouter() *http.ServeMux {
 	mux := http.NewServeMux()
-	a.registerViews(mux)
 	a.registerInternalViews(mux)
+	a.registerViews(mux)
 	a.registerExternalHandlers(mux)
 	return mux
 }
 
-// Run starts the application and listens for incoming requests.
+func (a *App) startup(address string) {
+	fmt.Printf("Starting server at %s\n", address)
+	fmt.Printf("Visit openapi docs at http://%s%s\n", address, a.openapiDocsURL)
+}
+
+// Run starts the application and listens for incoming requests over HTTP.
 func (a *App) Run(host string, port int) error {
 	mux := a.baseRouter()
-
 	addr := fmt.Sprintf("%s:%d", host, port)
-	fmt.Printf("Starting server at %s\n", addr)
-	fmt.Printf("Visit openapi docs at http://%s%s\n", addr, a.openapiDocsURL)
-
+	a.startup(addr)
 	return http.ListenAndServe(addr, mux)
+}
+
+// Run starts the application and listens for incoming requests over HTTPS.
+// This method will make the server to only support https requests, to support http and https connections do the following.
+//
+// Run the app with without tls in a gorouting, and then run the app with TLS.
+// NOTE: you can't use the same port for both, the known port for http is 80 and for https is 443.
+func (a *App) RunTLS(host string, port int, certFile string, keyFile string) error {
+	mux := a.baseRouter()
+	addr := fmt.Sprintf("%s:%d", host, port)
+	a.startup(addr)
+
+	return http.ListenAndServeTLS(addr, certFile, keyFile, mux)
 }
