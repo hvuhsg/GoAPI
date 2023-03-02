@@ -63,3 +63,17 @@ func (tm TimeoutMiddleware) Apply(next AppHandler) AppHandler {
 		}
 	}
 }
+
+type TimingMiddleware struct{}
+
+func (TimingMiddleware) Apply(next AppHandler) AppHandler {
+	return func(request *Request) Response {
+		startTime := time.Now()
+		response := next(request)
+		duration := time.Since(startTime)
+
+		fmt.Printf("Request took %s\n", duration.String())
+
+		return response
+	}
+}
