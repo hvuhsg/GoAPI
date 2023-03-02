@@ -10,7 +10,7 @@ func main() {
 	echo.Description("echo a back")
 	echo.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{})
 	echo.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.JsonResponse{"a": request.GetInt("a")}
+		return goapi.JsonResponse{Content: goapi.Json{"a": request.GetInt("a")}}
 	})
 
 	app.Run("127.0.0.1", 8080)

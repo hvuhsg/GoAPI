@@ -19,7 +19,7 @@ func main() {
 	add.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
 	add.Parameter("b", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
 	add.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.JsonResponse{"sum": request.GetInt("a") + request.GetInt("b")}
+		return goapi.JsonResponse{Content: goapi.Json{"sum": request.GetInt("a") + request.GetInt("b")}}
 	})
 
 	sub := app.Path("/sub")
@@ -29,7 +29,7 @@ func main() {
 	sub.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
 	sub.Parameter("b", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
 	sub.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.JsonResponse{"result": request.GetInt("a") - request.GetInt("b")}
+		return goapi.JsonResponse{Content: goapi.Json{"result": request.GetInt("a") - request.GetInt("b")}}
 	})
 
 	mul := app.Path("/mul")
@@ -44,7 +44,7 @@ func main() {
 			res = res * num
 		}
 
-		return goapi.JsonResponse{"result": res}
+		return goapi.JsonResponse{Content: goapi.Json{"result": res}}
 	})
 
 	if err := app.Run("127.0.0.1", 8080); err != nil {

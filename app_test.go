@@ -65,7 +65,7 @@ func TestRunApp(t *testing.T) {
 	ping.Description("ping pong")
 	ping.Parameter("age", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 5, Max: 25})
 	ping.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.JsonResponse{"age": request.GetInt("age")}
+		return goapi.JsonResponse{Content: goapi.Json{"age": request.GetInt("age")}, Code: 200}
 	})
 
 	go app.Run("127.0.0.1", 8080)
@@ -106,7 +106,7 @@ func TestOpenAPISchema(t *testing.T) {
 	add.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
 	add.Parameter("b", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
 	add.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.JsonResponse{"sum": request.GetInt("a") + request.GetInt("b")}
+		return goapi.JsonResponse{Content: goapi.Json{"sum": request.GetInt("a") + request.GetInt("b")}, Code: 200}
 	})
 
 	sub := app.Path("/sub")
@@ -117,7 +117,7 @@ func TestOpenAPISchema(t *testing.T) {
 	add.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
 	add.Parameter("b", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
 	add.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.JsonResponse{"result": request.GetInt("a") - request.GetInt("b")}
+		return goapi.JsonResponse{Content: goapi.Json{"result": request.GetInt("a") - request.GetInt("b")}, Code: 200}
 	})
 
 	go app.Run("127.0.0.1", 8081)

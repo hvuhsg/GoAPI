@@ -135,6 +135,7 @@ func (v *View) requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	response := v.action(req)
 	w.Header().Add("Content-Type", response.contentType())
+	w.WriteHeader(response.statusCode())
 	w.Write(response.toBytes())
 }
 
