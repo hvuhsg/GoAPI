@@ -80,7 +80,7 @@ func (TimingMiddleware) Apply(next AppHandler) AppHandler {
 }
 
 type IPFilterMiddleware struct {
-	allowedIPs []string
+	AllowedIPs []string
 }
 
 func (ipm IPFilterMiddleware) Apply(next AppHandler) AppHandler {
@@ -100,7 +100,7 @@ func (ipm IPFilterMiddleware) Apply(next AppHandler) AppHandler {
 }
 
 func (ipm IPFilterMiddleware) isAllowedIP(ip string) bool {
-	for _, allowedIP := range ipm.allowedIPs {
+	for _, allowedIP := range ipm.AllowedIPs {
 		if allowedIP == ip {
 			return true
 		}
