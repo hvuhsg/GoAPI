@@ -1,20 +1,29 @@
 package goapi
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"net/http"
+	urlpkg "net/url"
+	"path"
+	"strings"
+)
 
 type Response interface {
+	Headers() http.Header
 	toBytes() []byte
-	contentType() string
 	statusCode() int
 }
 
 type HtmlResponse struct {
+	headers http.Header
 	Content string
 	Code    int
 }
 
-func (HtmlResponse) contentType() string {
-	return "text/html"
+func (hr HtmlResponse) Headers() http.Header {
+	hr.headers = http.Header{}
+	hr.headers.Add("Content-Type", "text/html")
+	return hr.headers
 }
 
 func (hr HtmlResponse) toBytes() []byte {
@@ -31,12 +40,15 @@ func (hr HtmlResponse) statusCode() int {
 type Json map[string]any
 
 type JsonResponse struct {
+	headers http.Header
 	Content Json
 	Code    int
 }
 
-func (JsonResponse) contentType() string {
-	return "application/json"
+func (jr JsonResponse) Headers() http.Header {
+	jr.headers = http.Header{}
+	jr.headers.Add("Content-Type", "application/json")
+	return jr.headers
 }
 
 func (jr JsonResponse) toBytes() []byte {
@@ -52,4 +64,81 @@ func (jr JsonResponse) statusCode() int {
 		jr.Code = 200
 	}
 	return jr.Code
+}
+
+type redirectResponse struct {
+	headers http.Header
+	code    int
+}
+
+func newRedirectResponse(r *Request, url string, code int) Response {
+	rr := new(redirectResponse)
+	rr.code = code
+	rr.headers = http.Header{}
+
+	if u, err := urlpkg.Parse(url); err == nil {
+		// If url was relative, make its path absolute by
+		// combining with request path.
+		// The client would probably do this for us,
+		// but doing it ourselves is more reliable.
+		// See RFC 7231, section 7.1.2
+		if u.Scheme == "" && u.Host == "" {
+			oldpath := r.HTTPRequest.URL.Path
+			if oldpath == "" { // should not happen, but avoid a crash if it does
+				oldpath = "/"
+			}
+
+			// no leading http://server
+			if url == "" || url[0] != '/' {
+				// make relative path absolute
+				olddir, _ := path.Split(oldpath)
+				url = olddir + url
+			}
+
+			var query string
+			if i := strings.Index(url, "?"); i != -1 {
+				url, query = url[:i], url[i:]
+			}
+
+			// clean up but preserve trailing slash
+			trailing := strings.HasSuffix(url, "/")
+			url = path.Clean(url)
+			if trailing && !strings.HasSuffix(url, "/") {
+				url += "/"
+			}
+			url += query
+		}
+	}
+
+	// RFC 7231 notes that a short HTML body is usually included in
+	// the response because older user agents may not understand 301/307.
+	// Do it only if the request didn't already have a Content-Type header.
+	_, hadCT := rr.headers["Content-Type"]
+
+	rr.headers.Set("Location", hexEscapeNonASCII(url))
+	if !hadCT && (r.HTTPRequest.Method == "GET" || r.HTTPRequest.Method == "HEAD") {
+		rr.headers.Set("Content-Type", "text/html; charset=utf-8")
+	}
+
+	return rr
+}
+
+func (rr redirectResponse) toBytes() []byte {
+	return nil
+}
+
+func (rr redirectResponse) statusCode() int {
+	return rr.code
+}
+
+func (rr redirectResponse) Headers() http.Header {
+	return rr.headers
+}
+
+func NewPermanentRedirectResponse(r *Request, url string) Response {
+	return newRedirectResponse(r, url, http.StatusPermanentRedirect)
+}
+
+func NewTemporaryRedirectResponse(r *Request, url string) Response {
+	return newRedirectResponse(r, url, http.StatusTemporaryRedirect)
 }
