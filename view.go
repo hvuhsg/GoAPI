@@ -133,7 +133,14 @@ func (v *View) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := v.action(req)
-	w.Header().Add("Content-Type", response.contentType())
+
+	// copy response headers to response writer
+	for k, values := range response.Headers() {
+		for _, value := range values {
+			w.Header().Add(k, value)
+		}
+	}
+
 	w.WriteHeader(response.statusCode())
 	w.Write(response.toBytes())
 }
