@@ -82,8 +82,10 @@ You can add as many routes as you like to the app instance, and each route can h
 To help you get started with using GoAPI, we have provided some examples in the examples directory of the repository. These examples demonstrate various use cases of the framework and how to use its features.
 
 The examples included are:  
-- **smallest** The smallest example of ready to run api.
-- **math_api**: Simple use of methods, parameters and validators.  
+- [**smallest**](/examples/smallest/) The smallest example of ready to run api.
+- [**math_api**](/examples/math_api/) Simple use of methods, parameters and validators.  
+- [**external_handler**](/examples/external_handler/) Use of external handler (FileServer) int the app.
+- [**tls**](/examples/tls/) Running the app with HTTPS support.
 
 To run the examples, navigate to the examples directory and run the following command:
 
