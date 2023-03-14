@@ -7,6 +7,7 @@ import (
 	"github.com/hvuhsg/goapi/middlewares"
 	"github.com/hvuhsg/goapi/request"
 	"github.com/hvuhsg/goapi/responses"
+	"github.com/hvuhsg/goapi/validators"
 )
 
 const (
@@ -177,7 +178,7 @@ func (v *View) Middlewares(middlewares ...middlewares.Middleware) {
 	v.middlewares = append(v.middlewares, middlewares...)
 }
 
-func (v *View) Parameter(paramName string, in string, validators ...Validator) *View {
+func (v *View) Parameter(paramName string, in string, validators ...validators.Validator) *View {
 	v.requireMethods()
 	v.requireDescription()
 	v.parameters[paramName] = NewParameter(paramName, in, validators)

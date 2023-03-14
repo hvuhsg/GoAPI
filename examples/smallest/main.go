@@ -4,6 +4,7 @@ import (
 	"github.com/hvuhsg/goapi"
 	"github.com/hvuhsg/goapi/request"
 	"github.com/hvuhsg/goapi/responses"
+	"github.com/hvuhsg/goapi/validators"
 )
 
 func main() {
@@ -12,7 +13,7 @@ func main() {
 	echo := app.Path("/echo")
 	echo.Methods(goapi.GET)
 	echo.Description("echo a back")
-	echo.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{})
+	echo.Parameter("a", goapi.QUERY, validators.VRequired{}, validators.VIsInt{})
 	echo.Action(func(request *request.Request) responses.Response {
 		return responses.NewJSONResponse(responses.Json{"a": request.GetInt("a")}, 200)
 	})

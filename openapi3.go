@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/hvuhsg/goapi/validators"
 )
 
 // openapi3Schema generates the OpenAPI-3 schema for the given App
@@ -33,12 +34,12 @@ func openapi3Schema(a *App) ([]byte, error) {
 				// Loop through each validator defined for the parameter
 				for _, validator := range paramInfo.validators {
 					// Check if the validator is a VRequired validator, if so set the required field to true
-					_, ok = validator.(VRequired)
+					_, ok = validator.(validators.VRequired)
 					if ok {
 						required = true
 					}
 
-					validator.updateOpenAPISchema(schemaVal)
+					validator.UpdateOpenAPISchema(schemaVal)
 				}
 
 				// Create a new Parameter object and add it to the Parameters array

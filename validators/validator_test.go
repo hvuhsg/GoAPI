@@ -1,4 +1,4 @@
-package goapi
+package validators
 
 import (
 	"testing"

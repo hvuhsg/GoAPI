@@ -9,6 +9,7 @@ import (
 	"github.com/hvuhsg/goapi"
 	"github.com/hvuhsg/goapi/request"
 	"github.com/hvuhsg/goapi/responses"
+	"github.com/hvuhsg/goapi/validators"
 )
 
 func TestCreateView(t *testing.T) {
@@ -65,7 +66,7 @@ func TestRunApp(t *testing.T) {
 	ping := app.Path("/ping")
 	ping.Methods(goapi.GET)
 	ping.Description("ping pong")
-	ping.Parameter("age", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 5, Max: 25})
+	ping.Parameter("age", goapi.QUERY, validators.VRequired{}, validators.VIsInt{}, validators.VRange{Min: 5, Max: 25})
 	ping.Action(func(request *request.Request) responses.Response {
 		return responses.NewJSONResponse(responses.Json{"age": request.GetInt("age")}, 200)
 	})
@@ -105,8 +106,8 @@ func TestOpenAPISchema(t *testing.T) {
 	add.Tags("math")
 	add.Methods(goapi.GET)
 	add.Description("Add two numbers")
-	add.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
-	add.Parameter("b", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
+	add.Parameter("a", goapi.QUERY, validators.VRequired{}, validators.VIsInt{}, validators.VRange{Min: 0, Max: 100})
+	add.Parameter("b", goapi.QUERY, validators.VRequired{}, validators.VIsInt{}, validators.VRange{Min: 0, Max: 100})
 	add.Action(func(request *request.Request) responses.Response {
 		return responses.NewJSONResponse(responses.Json{"sum": request.GetInt("a") + request.GetInt("b")}, 200)
 	})
@@ -116,8 +117,8 @@ func TestOpenAPISchema(t *testing.T) {
 	sub.Tags("math", "deprecated")
 	sub.Methods(goapi.GET)
 	add.Description("Subtruct two numbers (a - b)")
-	add.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
-	add.Parameter("b", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
+	add.Parameter("a", goapi.QUERY, validators.VRequired{}, validators.VIsInt{}, validators.VRange{Min: 0, Max: 100})
+	add.Parameter("b", goapi.QUERY, validators.VRequired{}, validators.VIsInt{}, validators.VRange{Min: 0, Max: 100})
 	add.Action(func(request *request.Request) responses.Response {
 		return responses.NewJSONResponse(responses.Json{"result": request.GetInt("a") - request.GetInt("b")}, 200)
 	})

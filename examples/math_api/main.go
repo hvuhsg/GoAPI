@@ -6,6 +6,7 @@ import (
 	"github.com/hvuhsg/goapi"
 	"github.com/hvuhsg/goapi/request"
 	"github.com/hvuhsg/goapi/responses"
+	"github.com/hvuhsg/goapi/validators"
 )
 
 func main() {
@@ -18,8 +19,8 @@ func main() {
 	add.Tags("math")
 	add.Methods(goapi.GET)
 	add.Description("Add two numbers")
-	add.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
-	add.Parameter("b", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
+	add.Parameter("a", goapi.QUERY, validators.VRequired{}, validators.VIsInt{}, validators.VRange{Min: 0, Max: 100})
+	add.Parameter("b", goapi.QUERY, validators.VRequired{}, validators.VIsInt{}, validators.VRange{Min: 0, Max: 100})
 	add.Action(func(request *request.Request) responses.Response {
 		return responses.NewJSONResponse(responses.Json{"sum": request.GetInt("a") + request.GetInt("b")}, 200)
 	})
@@ -28,8 +29,8 @@ func main() {
 	sub.Tags("math")
 	sub.Methods(goapi.GET)
 	sub.Description("Subtruct two numbers (a - b)")
-	sub.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
-	sub.Parameter("b", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
+	sub.Parameter("a", goapi.QUERY, validators.VRequired{}, validators.VIsInt{}, validators.VRange{Min: 0, Max: 100})
+	sub.Parameter("b", goapi.QUERY, validators.VRequired{}, validators.VIsInt{}, validators.VRange{Min: 0, Max: 100})
 	sub.Action(func(request *request.Request) responses.Response {
 		return responses.NewJSONResponse(responses.Json{"result": request.GetInt("a") - request.GetInt("b")}, 200)
 	})
@@ -38,7 +39,7 @@ func main() {
 	mul.Tags("math", "array")
 	mul.Methods(goapi.PUT, goapi.CONNECT)
 	mul.Description("Multiply array of numbers")
-	mul.Parameter("numbers", goapi.QUERY, goapi.VRequired{}, goapi.VIsArray{})
+	mul.Parameter("numbers", goapi.QUERY, validators.VRequired{}, validators.VIsArray{})
 	mul.Action(func(request *request.Request) responses.Response {
 		res := 1
 		numbers := request.GetIntArray("numbers")
