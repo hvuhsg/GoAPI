@@ -3,6 +3,7 @@ package goapi
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -35,7 +36,7 @@ func (SimpleLoggingMiddleware) Apply(next AppHandler) AppHandler {
 		userAgent := request.HTTPRequest.UserAgent()
 		statusCode := response.statusCode()
 
-		fmt.Printf("%s - - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"\n", remoteAddr, date, method, path, request.HTTPRequest.Proto, statusCode, responseSize, fullURL, userAgent)
+		log.Printf("%s - - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"\n", remoteAddr, date, method, path, request.HTTPRequest.Proto, statusCode, responseSize, fullURL, userAgent)
 		return response
 	}
 }
@@ -76,7 +77,7 @@ func (TimingMiddleware) Apply(next AppHandler) AppHandler {
 		response := next(request)
 		duration := time.Since(startTime)
 
-		fmt.Printf("Request took %s\n", duration.String())
+		log.Printf("Request took %s\n", duration.String())
 
 		return response
 	}
