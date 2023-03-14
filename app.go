@@ -1,10 +1,14 @@
 package goapi
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"golang.ngrok.com/ngrok"
+	"golang.ngrok.com/ngrok/config"
 )
 
 // App represents the main application.
@@ -145,8 +149,8 @@ func (a *App) baseRouter() *http.ServeMux {
 }
 
 func (a *App) startup(address string) {
-	fmt.Printf("Starting server at %s\n", address)
-	fmt.Printf("Visit openapi docs at http://%s%s\n", address, a.openapiDocsURL)
+	log.Printf("Starting server at %s\n", address)
+	log.Printf("Visit openapi docs at http://%s%s\n", address, a.openapiDocsURL)
 }
 
 // Run starts the application and listens for incoming requests over HTTP.
@@ -168,4 +172,21 @@ func (a *App) RunTLS(host string, port int, certFile string, keyFile string) err
 	a.startup(addr)
 
 	return http.ListenAndServeTLS(addr, certFile, keyFile, mux)
+}
+
+// Use ngrok tunnel for development
+func (a *App) RunNgrok(authtoken string) error {
+	mux := a.baseRouter()
+	ngrok.WithAuthtokenFromEnv()
+	tun, err := ngrok.Listen(context.Background(),
+		config.HTTPEndpoint(),
+		ngrok.WithAuthtoken(authtoken),
+	)
+	if err != nil {
+		return err
+	}
+
+	log.Println("tunnel created:", tun.URL())
+
+	return http.Serve(tun, mux)
 }
