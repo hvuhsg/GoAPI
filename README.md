@@ -28,6 +28,7 @@ The key features are:
 - **middlewares** support [---->](#middlewares)
 - **native handlers** support [---->](#native-handlers)
 - **SSL/TLS** support [---->](#https-support)
+- **ngrok tunnel** built in [---->](#ngrok-tunnel)
 
 ## Quick Start
 ### Install
@@ -86,6 +87,7 @@ The examples included are:
 - [**math_api**](/examples/math_api/) Simple use of methods, parameters and validators.  
 - [**external_handler**](/examples/external_handler/) Use of external handler (FileServer) int the app.
 - [**tls**](/examples/tls/) Running the app with HTTPS support.
+- [**ngrok_tunnel**](/examples/ngrok_tunnel/) Run your app over ngrok tunnel without any external dependencies.  
 
 To run the examples, navigate to the examples directory and run the following command:
 
@@ -247,3 +249,39 @@ func main() {
 	app.RunTLS("127.0.0.1", 8080, "./server.crt", "./server.key")
 }
 ```
+
+## Ngrok Tunnel
+GoAPI support seamless and simple use of ngrok tunnels during the development of the server.
+<details>
+<summary>Code example</summary>
+
+```go
+package main
+
+import (
+	"log"
+	"os"
+
+	"github.com/hvuhsg/goapi"
+)
+
+func main() {
+	app := goapi.GoAPI("ngrok tunnel", "1.0v")
+
+	echo := app.Path("/")
+	echo.Methods(goapi.GET)
+	echo.Description("home page")
+	echo.Action(func(request *goapi.Request) goapi.Response {
+		return goapi.HtmlResponse{Content: "<h1>Served over ngrok tunnel</h1>"}
+	})
+
+	ngrokToken := os.Getenv("NGROK_TOKEN")
+	if ngrokToken == "" {
+		log.Println("Enviroment variable NGROK_TOKEN is required")
+		os.Exit(1)
+	}
+
+	app.RunNgrok(ngrokToken)
+}
+```
+</details>
