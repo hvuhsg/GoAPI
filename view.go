@@ -1,7 +1,7 @@
 package goapi
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -113,7 +113,7 @@ func (v *View) requestHandler(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		// If paniced; responde with 500 internal server error
 		if r := recover(); r != nil {
-			fmt.Printf("ERROR: %v\n", r)
+			log.Printf("ERROR: %v\n", r)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 	}()
