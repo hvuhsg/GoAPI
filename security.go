@@ -1,11 +1,15 @@
 package goapi
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/hvuhsg/goapi/request"
+)
 
 type SecurityProvider interface {
 	GetName() string
 	GetScopes() []string
-	IsAuthenticated(*Request) bool
+	IsAuthenticated(*request.Request) bool
 }
 
 type APISecurity struct {
@@ -21,7 +25,7 @@ func (APISecurity) GetScopes() []string {
 	return []string{}
 }
 
-func (sec *APISecurity) IsAuthenticated(r *Request) bool {
+func (sec *APISecurity) IsAuthenticated(r *request.Request) bool {
 	defer func() {
 		if r := recover(); r != nil {
 			panic(fmt.Sprintf("API Header '%s' not found", sec.headerName))

@@ -1,4 +1,4 @@
-package goapi
+package request
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 
 type Request struct {
 	HTTPRequest *http.Request
-	parameters  map[string]any
+	Parameters  map[string]any
 }
 
 func NewRequest(req *http.Request) *Request {
@@ -69,12 +69,12 @@ func NewRequest(req *http.Request) *Request {
 
 	return &Request{
 		HTTPRequest: req,
-		parameters:  params,
+		Parameters:  params,
 	}
 }
 
 func (r *Request) GetString(name string) string {
-	val, ok := r.parameters[name]
+	val, ok := r.Parameters[name]
 	if !ok {
 		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
@@ -88,7 +88,7 @@ func (r *Request) GetString(name string) string {
 }
 
 func (r *Request) GetInt(name string) int {
-	val, ok := r.parameters[name]
+	val, ok := r.Parameters[name]
 	if !ok {
 		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
@@ -108,7 +108,7 @@ func (r *Request) GetInt(name string) int {
 }
 
 func (r *Request) GetFloat(name string) float64 {
-	val, ok := r.parameters[name]
+	val, ok := r.Parameters[name]
 	if !ok {
 		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
@@ -130,7 +130,7 @@ func (r *Request) GetFloat(name string) float64 {
 }
 
 func (r *Request) GetBool(name string) bool {
-	val, ok := r.parameters[name]
+	val, ok := r.Parameters[name]
 	if !ok {
 		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
@@ -150,7 +150,7 @@ func (r *Request) GetBool(name string) bool {
 }
 
 func (r *Request) GetArray(name string) []interface{} {
-	val, ok := r.parameters[name]
+	val, ok := r.Parameters[name]
 	if !ok {
 		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
@@ -168,7 +168,7 @@ func (r *Request) GetArray(name string) []interface{} {
 }
 
 func (r *Request) GetStringArray(name string) []string {
-	val, ok := r.parameters[name]
+	val, ok := r.Parameters[name]
 	if !ok {
 		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
@@ -184,7 +184,7 @@ func (r *Request) GetStringArray(name string) []string {
 }
 
 func (r *Request) GetIntArray(name string) []int {
-	val, ok := r.parameters[name]
+	val, ok := r.Parameters[name]
 	if !ok {
 		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
@@ -224,7 +224,7 @@ func (r *Request) GetIntArray(name string) []int {
 }
 
 func (r *Request) GetFloatArray(name string) []float64 {
-	val, ok := r.parameters[name]
+	val, ok := r.Parameters[name]
 	if !ok {
 		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
@@ -248,7 +248,7 @@ func (r *Request) GetFloatArray(name string) []float64 {
 }
 
 func (r *Request) GetBoolArray(name string) []bool {
-	val, ok := r.parameters[name]
+	val, ok := r.Parameters[name]
 	if !ok {
 		panic(fmt.Sprintf("parameter '%s' not found", name))
 	}
@@ -273,7 +273,7 @@ func (r *Request) GetBoolArray(name string) []bool {
 
 func (r *Request) GetMap(name string) (map[string]interface{}, error) {
 	// FIXME
-	value, ok := r.parameters[name].(map[string]interface{})
+	value, ok := r.Parameters[name].(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("parameter %s not found or not a map", name)
 	}
@@ -281,7 +281,7 @@ func (r *Request) GetMap(name string) (map[string]interface{}, error) {
 }
 
 func (r *Request) GetStringBoolMap(name string) (map[string]bool, error) {
-	val, ok := r.parameters[name]
+	val, ok := r.Parameters[name]
 	if !ok {
 		return nil, fmt.Errorf("parameter '%s' not found", name)
 	}

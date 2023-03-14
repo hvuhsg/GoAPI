@@ -2,10 +2,12 @@ package goapi
 
 import (
 	"testing"
+
+	"github.com/hvuhsg/goapi/request"
 )
 
 func TestVRequired(t *testing.T) {
-	req := &Request{parameters: map[string]interface{}{"param1": 42}}
+	req := &request.Request{Parameters: map[string]interface{}{"param1": 42}}
 	validator := VRequired{}
 
 	err := validator.Validate(req, "param1")
@@ -20,7 +22,7 @@ func TestVRequired(t *testing.T) {
 }
 
 func TestVIsString(t *testing.T) {
-	req := &Request{parameters: map[string]interface{}{"param1": "hello"}}
+	req := &request.Request{Parameters: map[string]interface{}{"param1": "hello"}}
 	validator := VIsString{}
 
 	err := validator.Validate(req, "param1")
@@ -28,7 +30,7 @@ func TestVIsString(t *testing.T) {
 		t.Errorf("Unexpected error: %s", err)
 	}
 
-	req.parameters["param2"] = 42
+	req.Parameters["param2"] = 42
 	err = validator.Validate(req, "param2")
 	if err == nil {
 		t.Errorf("Expected error, got nil")
@@ -36,7 +38,7 @@ func TestVIsString(t *testing.T) {
 }
 
 func TestVIsInt(t *testing.T) {
-	req := &Request{parameters: map[string]interface{}{"param1": 42}}
+	req := &request.Request{Parameters: map[string]interface{}{"param1": 42}}
 	validator := VIsInt{}
 
 	err := validator.Validate(req, "param1")
@@ -44,7 +46,7 @@ func TestVIsInt(t *testing.T) {
 		t.Errorf("Unexpected error: %s", err)
 	}
 
-	req.parameters["param2"] = "not an int"
+	req.Parameters["param2"] = "not an int"
 	err = validator.Validate(req, "param2")
 	if err == nil {
 		t.Errorf("Expected error, got nil")
@@ -52,7 +54,7 @@ func TestVIsInt(t *testing.T) {
 }
 
 func TestVIsFloat(t *testing.T) {
-	req := &Request{parameters: map[string]interface{}{"param1": 3.14}}
+	req := &request.Request{Parameters: map[string]interface{}{"param1": 3.14}}
 	validator := VIsFloat{}
 
 	err := validator.Validate(req, "param1")
@@ -60,7 +62,7 @@ func TestVIsFloat(t *testing.T) {
 		t.Errorf("Unexpected error: %s", err)
 	}
 
-	req.parameters["param2"] = "not a float"
+	req.Parameters["param2"] = "not a float"
 	err = validator.Validate(req, "param2")
 	if err == nil {
 		t.Errorf("Expected error, got nil")
@@ -68,7 +70,7 @@ func TestVIsFloat(t *testing.T) {
 }
 
 func TestVIsBool(t *testing.T) {
-	req := &Request{parameters: map[string]interface{}{"param1": true}}
+	req := &request.Request{Parameters: map[string]interface{}{"param1": true}}
 	validator := VIsBool{}
 
 	err := validator.Validate(req, "param1")
@@ -76,7 +78,7 @@ func TestVIsBool(t *testing.T) {
 		t.Errorf("Unexpected error: %s", err)
 	}
 
-	req.parameters["param2"] = "not a bool"
+	req.Parameters["param2"] = "not a bool"
 	err = validator.Validate(req, "param2")
 	if err == nil {
 		t.Errorf("Expected error, got nil")
@@ -84,7 +86,7 @@ func TestVIsBool(t *testing.T) {
 }
 
 func TestVIsArray(t *testing.T) {
-	req := &Request{parameters: map[string]interface{}{"param1": []interface{}{1, 2, 3}}}
+	req := &request.Request{Parameters: map[string]interface{}{"param1": []interface{}{1, 2, 3}}}
 	validator := VIsArray{}
 
 	err := validator.Validate(req, "param1")
@@ -92,7 +94,7 @@ func TestVIsArray(t *testing.T) {
 		t.Errorf("Unexpected error: %s", err)
 	}
 
-	req.parameters["param2"] = "not an array"
+	req.Parameters["param2"] = "not an array"
 	err = validator.Validate(req, "param2")
 	if err == nil {
 		t.Errorf("Expected error, got nil")
@@ -101,7 +103,7 @@ func TestVIsArray(t *testing.T) {
 
 func TestVIsMap(t *testing.T) {
 	// FIXME
-	req := &Request{parameters: map[string]interface{}{"param1": map[string]interface{}{"a": 1, "b": 2}}}
+	req := &request.Request{Parameters: map[string]interface{}{"param1": map[string]interface{}{"a": 1, "b": 2}}}
 	validator := VIsMap{}
 
 	err := validator.Validate(req, "param1")
@@ -109,7 +111,7 @@ func TestVIsMap(t *testing.T) {
 		t.Errorf("Unexpected error: %s", err)
 	}
 
-	req.parameters["param2"] = "exists"
+	req.Parameters["param2"] = "exists"
 	err = validator.Validate(req, "param2")
 	if err != nil {
 		t.Errorf("Not expecting error")

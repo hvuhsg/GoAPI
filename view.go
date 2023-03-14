@@ -3,6 +3,10 @@ package goapi
 import (
 	"log"
 	"net/http"
+
+	"github.com/hvuhsg/goapi/middlewares"
+	"github.com/hvuhsg/goapi/request"
+	"github.com/hvuhsg/goapi/responses"
 )
 
 const (
@@ -48,8 +52,8 @@ type View struct {
 	description string
 	tags        []string
 	depreceted  bool
-	middlewares []middleware
-	action      func(request *Request) Response
+	middlewares []middlewares.Middleware
+	action      func(request *request.Request) responses.Response
 }
 
 func NewView(path string) *View {
@@ -60,7 +64,7 @@ func NewView(path string) *View {
 	view.description = ""
 	view.tags = make([]string, 0)
 	view.depreceted = false
-	view.middlewares = make([]middleware, 0)
+	view.middlewares = make([]middlewares.Middleware, 0)
 	view.action = nil
 	return view
 }
@@ -82,7 +86,7 @@ func (v *View) validMethod(req *http.Request) bool {
 	return ok
 }
 
-func (v *View) isValidRequest(r *Request) (bool, error) {
+func (v *View) isValidRequest(r *request.Request) (bool, error) {
 	for paramName, param := range v.parameters {
 		for _, validator := range param.validators {
 			err := validator.Validate(r, paramName)
@@ -95,7 +99,7 @@ func (v *View) isValidRequest(r *Request) (bool, error) {
 	return true, nil
 }
 
-func (v *View) applyMiddlewares(appMiddlewares []middleware) {
+func (v *View) applyMiddlewares(appMiddlewares []middlewares.Middleware) {
 	// Apply app middlewares
 	for i := len(appMiddlewares) - 1; i >= 0; i-- {
 		m := appMiddlewares[i]
@@ -124,7 +128,7 @@ func (v *View) requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req := NewRequest(r)
+	req := request.NewRequest(r)
 
 	isValid, err := v.isValidRequest(req)
 	if !isValid {
@@ -141,8 +145,8 @@ func (v *View) requestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.WriteHeader(response.statusCode())
-	w.Write(response.toBytes())
+	w.WriteHeader(response.StatusCode())
+	w.Write(response.ToBytes())
 }
 
 // Mark view as deprecated
@@ -169,7 +173,7 @@ func (v *View) Description(description string) *View {
 	return v
 }
 
-func (v *View) Middlewares(middlewares ...middleware) {
+func (v *View) Middlewares(middlewares ...middlewares.Middleware) {
 	v.middlewares = append(v.middlewares, middlewares...)
 }
 
@@ -180,7 +184,7 @@ func (v *View) Parameter(paramName string, in string, validators ...Validator) *
 	return v
 }
 
-type AppHandler func(request *Request) Response
+type AppHandler func(request *request.Request) responses.Response
 
 func (v *View) Action(r AppHandler) {
 	v.requireMethods()

@@ -10,18 +10,19 @@ import (
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/hvuhsg/goapi/request"
 )
 
 type Validator interface {
-	Validate(r *Request, paramName string) error
+	Validate(r *request.Request, paramName string) error
 	updateOpenAPISchema(schema *openapi3.Schema)
 }
 
 type VRequired struct{}
 
 func (v VRequired) updateOpenAPISchema(schema *openapi3.Schema) {}
-func (VRequired) Validate(r *Request, paramName string) error {
-	_, ok := r.parameters[paramName]
+func (VRequired) Validate(r *request.Request, paramName string) error {
+	_, ok := r.Parameters[paramName]
 	if !ok {
 		return fmt.Errorf("parameter %s is required", paramName)
 	}
@@ -32,14 +33,14 @@ func (VRequired) Validate(r *Request, paramName string) error {
 type VIsString struct{}
 
 func (v VIsString) updateOpenAPISchema(schema *openapi3.Schema) { schema.Type = "string" }
-func (VIsString) Validate(r *Request, paramName string) (err error) {
+func (VIsString) Validate(r *request.Request, paramName string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("parameter %s must be of type 'string'", paramName)
 		}
 	}()
 
-	_, ok := r.parameters[paramName]
+	_, ok := r.Parameters[paramName]
 
 	if ok {
 		r.GetString(paramName)
@@ -54,14 +55,14 @@ func (v VIsInt) updateOpenAPISchema(schema *openapi3.Schema) {
 	schema.Type = "integer"
 	schema.Format = "int64"
 }
-func (VIsInt) Validate(r *Request, paramName string) (err error) {
+func (VIsInt) Validate(r *request.Request, paramName string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("parameter %s must be of type 'int'", paramName)
 		}
 	}()
 
-	_, ok := r.parameters[paramName]
+	_, ok := r.Parameters[paramName]
 
 	if ok {
 		r.GetInt(paramName)
@@ -76,14 +77,14 @@ func (v VIsFloat) updateOpenAPISchema(schema *openapi3.Schema) {
 	schema.Type = "number"
 	schema.Format = "float"
 }
-func (VIsFloat) Validate(r *Request, paramName string) (err error) {
+func (VIsFloat) Validate(r *request.Request, paramName string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("parameter %s must be of type 'float'", paramName)
 		}
 	}()
 
-	_, ok := r.parameters[paramName]
+	_, ok := r.Parameters[paramName]
 
 	if ok {
 		r.GetFloat(paramName)
@@ -95,14 +96,14 @@ func (VIsFloat) Validate(r *Request, paramName string) (err error) {
 type VIsBool struct{}
 
 func (v VIsBool) updateOpenAPISchema(schema *openapi3.Schema) { schema.Type = "boolean" }
-func (VIsBool) Validate(r *Request, paramName string) (err error) {
+func (VIsBool) Validate(r *request.Request, paramName string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("parameter %s must be of type 'bool'", paramName)
 		}
 	}()
 
-	_, ok := r.parameters[paramName]
+	_, ok := r.Parameters[paramName]
 
 	if ok {
 		r.GetBool(paramName)
@@ -114,14 +115,14 @@ func (VIsBool) Validate(r *Request, paramName string) (err error) {
 type VIsArray struct{}
 
 func (v VIsArray) updateOpenAPISchema(schema *openapi3.Schema) { schema.Type = "array" }
-func (VIsArray) Validate(r *Request, paramName string) (err error) {
+func (VIsArray) Validate(r *request.Request, paramName string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("parameter %s must be of type 'array'", paramName)
 		}
 	}()
 
-	_, ok := r.parameters[paramName]
+	_, ok := r.Parameters[paramName]
 
 	if ok {
 		r.GetArray(paramName)
@@ -133,14 +134,14 @@ func (VIsArray) Validate(r *Request, paramName string) (err error) {
 type VIsMap struct{}
 
 func (v VIsMap) updateOpenAPISchema(schema *openapi3.Schema) { schema.Type = "object" }
-func (VIsMap) Validate(r *Request, paramName string) (err error) {
+func (VIsMap) Validate(r *request.Request, paramName string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("parameter %s must be of type 'map'", paramName)
 		}
 	}()
 
-	_, ok := r.parameters[paramName]
+	_, ok := r.Parameters[paramName]
 
 	if ok {
 		r.GetMap(paramName)
@@ -160,7 +161,7 @@ func (v VStringLength) updateOpenAPISchema(schema *openapi3.Schema) {
 	maxL := uint64(v.Max)
 	schema.MaxLength = &maxL
 }
-func (v VStringLength) Validate(r *Request, paramName string) error {
+func (v VStringLength) Validate(r *request.Request, paramName string) error {
 	vr := VIsString{}
 	err := vr.Validate(r, paramName)
 	if err != nil {
@@ -185,7 +186,7 @@ func (v VRange) updateOpenAPISchema(schema *openapi3.Schema) {
 	schema.Min = &v.Min
 	schema.Max = &v.Max
 }
-func (v VRange) Validate(r *Request, paramName string) error {
+func (v VRange) Validate(r *request.Request, paramName string) error {
 	vr := VIsFloat{}
 	err := vr.Validate(r, paramName)
 	if err != nil {
@@ -208,7 +209,7 @@ var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]
 func (v VIsEmail) updateOpenAPISchema(schema *openapi3.Schema) {
 	schema.Format = "email"
 }
-func (v VIsEmail) Validate(r *Request, paramName string) error {
+func (v VIsEmail) Validate(r *request.Request, paramName string) error {
 	email := r.GetString(paramName)
 	if !emailRegex.MatchString(email) {
 		return fmt.Errorf("parameter %s must be a valid email address", paramName)
@@ -221,7 +222,7 @@ type VIsURL struct{}
 func (v VIsURL) updateOpenAPISchema(schema *openapi3.Schema) {
 	schema.Format = "url"
 }
-func (v VIsURL) Validate(r *Request, paramName string) error {
+func (v VIsURL) Validate(r *request.Request, paramName string) error {
 	urlStr := r.GetString(paramName)
 
 	// Parse the URL and check for any errors
@@ -240,7 +241,7 @@ var uuidRegex = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[8
 func (v VIsUUID) updateOpenAPISchema(schema *openapi3.Schema) {
 	schema.Format = "uuid"
 }
-func (v VIsUUID) Validate(r *Request, paramName string) error {
+func (v VIsUUID) Validate(r *request.Request, paramName string) error {
 	uuidStr := r.GetString(paramName)
 
 	// Check if the UUID string matches the expected format
@@ -266,7 +267,7 @@ type VIsDate struct {
 func (v VIsDate) updateOpenAPISchema(schema *openapi3.Schema) {
 	schema.Format = "date"
 }
-func (v VIsDate) Validate(r *Request, paramName string) error {
+func (v VIsDate) Validate(r *request.Request, paramName string) error {
 	dateStr := r.GetString(paramName)
 
 	// Parse the date string based on the specified format
@@ -291,7 +292,7 @@ func (v VRegex) updateOpenAPISchema(schema *openapi3.Schema) {
 	// Not applicable
 }
 
-func (v VRegex) Validate(r *Request, paramName string) error {
+func (v VRegex) Validate(r *request.Request, paramName string) error {
 	str := r.GetString(paramName)
 
 	// Compile the regular expression
@@ -318,7 +319,7 @@ func (v VIsTime) updateOpenAPISchema(schema *openapi3.Schema) {
 	schema.Format = "time"
 }
 
-func (v VIsTime) Validate(r *Request, paramName string) error {
+func (v VIsTime) Validate(r *request.Request, paramName string) error {
 	timeStr := r.GetString(paramName)
 
 	// Parse the time string based on the specified format
@@ -347,7 +348,7 @@ func (v VPassword) updateOpenAPISchema(schema *openapi3.Schema) {
 	// Not applicable
 }
 
-func (v VPassword) Validate(r *Request, paramName string) error {
+func (v VPassword) Validate(r *request.Request, paramName string) error {
 	password := r.GetString(paramName)
 
 	// Check length requirements
@@ -375,7 +376,7 @@ func (v VPassword) Validate(r *Request, paramName string) error {
 
 type VIPAddress struct{}
 
-func (v VIPAddress) Validate(r *Request, paramName string) error {
+func (v VIPAddress) Validate(r *request.Request, paramName string) error {
 	ipStr := r.GetString(paramName)
 
 	ip := net.ParseIP(ipStr)
@@ -390,7 +391,7 @@ type VPhoneNumber struct {
 	Prefix string
 }
 
-func (v VPhoneNumber) Validate(r *Request, paramName string) error {
+func (v VPhoneNumber) Validate(r *request.Request, paramName string) error {
 	phoneNumber := r.GetString(paramName)
 
 	// Regular expression for phone numbers with optional prefix and extension

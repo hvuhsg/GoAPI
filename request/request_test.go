@@ -1,4 +1,4 @@
-package goapi
+package request
 
 import (
 	"fmt"
@@ -91,7 +91,7 @@ func TestGetString(t *testing.T) {
 
 	// Define a test request with some parameters
 	req := &Request{
-		parameters: map[string]interface{}{
+		Parameters: map[string]interface{}{
 			"str": "hello",
 			"num": 42,
 		},
@@ -129,7 +129,7 @@ func TestGetInt(t *testing.T) {
 
 	// Define a test request with some parameters
 	req := &Request{
-		parameters: map[string]interface{}{
+		Parameters: map[string]interface{}{
 			"num1": 42,
 			"num2": "84",
 			"str":  "not a number",
@@ -176,7 +176,7 @@ func TestGetFloat(t *testing.T) {
 
 	// Define a test request with some parameters
 	req := &Request{
-		parameters: map[string]interface{}{
+		Parameters: map[string]interface{}{
 			"float1": 3.14,
 			"float2": "2.718",
 			"str":    "not a number",
@@ -223,7 +223,7 @@ func TestGetBool(t *testing.T) {
 
 	// Define a test request with some parameters
 	req := &Request{
-		parameters: map[string]interface{}{
+		Parameters: map[string]interface{}{
 			"bool1": true,
 			"bool2": "false",
 			"str":   "not a boolean",
@@ -270,7 +270,7 @@ func TestGetStringArray(t *testing.T) {
 
 	// Define a test request with some parameters
 	req := &Request{
-		parameters: map[string]interface{}{
+		Parameters: map[string]interface{}{
 			"array1": []int{1, 2, 3},
 			"array2": []interface{}{"1", "2", "3"},
 			"str":    "not an array",

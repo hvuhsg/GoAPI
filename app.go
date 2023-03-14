@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/hvuhsg/goapi/middlewares"
 	"golang.ngrok.com/ngrok"
 	"golang.ngrok.com/ngrok/config"
 )
@@ -22,7 +23,7 @@ type App struct {
 	tags             openapi3.Tags
 	security         openapi3.SecurityRequirements
 	externalHandlers map[string]http.Handler
-	middlewares      []middleware
+	middlewares      []middlewares.Middleware
 	views            map[string]*View // A map of View objects keyed by their URL paths
 	openapiDocsURL   string           // URL path for the OpenAPI documentation
 	openapiSchemaURL string           // URL path for the OpenAPI schema
@@ -39,7 +40,7 @@ func GoAPI(title string, version string) *App {
 	app.contact = openapi3.Contact{}
 	app.tags = openapi3.Tags{}
 	app.externalHandlers = make(map[string]http.Handler)
-	app.middlewares = make([]middleware, 0)
+	app.middlewares = make([]middlewares.Middleware, 0)
 	app.views = make(map[string]*View)
 	app.openapiDocsURL = "/docs"
 	app.openapiSchemaURL = "/openapi.json"
@@ -99,7 +100,7 @@ func (a *App) Security(securiyProvider SecurityProvider) {
 }
 
 // Add middlewares to all routes
-func (a *App) Middlewares(middlewares ...middleware) {
+func (a *App) Middlewares(middlewares ...middlewares.Middleware) {
 	a.middlewares = append(a.middlewares, middlewares...)
 }
 

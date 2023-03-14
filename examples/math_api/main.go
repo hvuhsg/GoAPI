@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/hvuhsg/goapi"
+	"github.com/hvuhsg/goapi/request"
+	"github.com/hvuhsg/goapi/responses"
 )
 
 func main() {
@@ -18,8 +20,8 @@ func main() {
 	add.Description("Add two numbers")
 	add.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
 	add.Parameter("b", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
-	add.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.JsonResponse{Content: goapi.Json{"sum": request.GetInt("a") + request.GetInt("b")}}
+	add.Action(func(request *request.Request) responses.Response {
+		return responses.NewJSONResponse(responses.Json{"sum": request.GetInt("a") + request.GetInt("b")}, 200)
 	})
 
 	sub := app.Path("/sub")
@@ -28,8 +30,8 @@ func main() {
 	sub.Description("Subtruct two numbers (a - b)")
 	sub.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
 	sub.Parameter("b", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
-	sub.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.JsonResponse{Content: goapi.Json{"result": request.GetInt("a") - request.GetInt("b")}}
+	sub.Action(func(request *request.Request) responses.Response {
+		return responses.NewJSONResponse(responses.Json{"result": request.GetInt("a") - request.GetInt("b")}, 200)
 	})
 
 	mul := app.Path("/mul")
@@ -37,14 +39,14 @@ func main() {
 	mul.Methods(goapi.PUT, goapi.CONNECT)
 	mul.Description("Multiply array of numbers")
 	mul.Parameter("numbers", goapi.QUERY, goapi.VRequired{}, goapi.VIsArray{})
-	mul.Action(func(request *goapi.Request) goapi.Response {
+	mul.Action(func(request *request.Request) responses.Response {
 		res := 1
 		numbers := request.GetIntArray("numbers")
 		for _, num := range numbers {
 			res = res * num
 		}
 
-		return goapi.JsonResponse{Content: goapi.Json{"result": res}}
+		return responses.NewJSONResponse(responses.Json{"result": res}, 200)
 	})
 
 	if err := app.Run("127.0.0.1", 8080); err != nil {

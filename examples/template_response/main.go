@@ -4,6 +4,8 @@ import (
 	"log"
 
 	"github.com/hvuhsg/goapi"
+	"github.com/hvuhsg/goapi/request"
+	"github.com/hvuhsg/goapi/responses"
 )
 
 func main() {
@@ -12,9 +14,9 @@ func main() {
 	echo := app.Path("/")
 	echo.Methods(goapi.GET)
 	echo.Description("get template")
-	echo.Action(func(request *goapi.Request) goapi.Response {
+	echo.Action(func(request *request.Request) responses.Response {
 		data := map[string]string{"Title": "ss", "Header": "sadd", "Content": "asdsd"}
-		return goapi.TemplateResponse{TemplatePath: "./index.html", Data: data, Code: 200}
+		return responses.NewTemplateResponse("./index.html", data, 200)
 	})
 
 	err := app.Run("127.0.0.1", 8000)

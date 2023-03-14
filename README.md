@@ -57,7 +57,11 @@ Once you have created the app instance, you can add routes to it by calling the 
 ```go
 package main
 
-import "github.com/hvuhsg/goapi"
+import (
+	"github.com/hvuhsg/goapi"
+	"github.com/hvuhsg/goapi/request"
+	"github.com/hvuhsg/goapi/responses"
+)
 
 func main() {
 	app := goapi.GoAPI("small", "1.0v")
@@ -66,8 +70,8 @@ func main() {
 	echo.Methods(goapi.GET)
 	echo.Description("echo a back")
 	echo.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{})
-	echo.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.JsonResponse{"a": request.GetInt("a")}
+	echo.Action(func(request *request.Request) responses.Response {
+		return responses.NewJSONResponse(responses.Json{"a": request.GetInt("a")}, 200)
 	})
 
 	app.Run("127.0.0.1", 8080)
@@ -120,7 +124,7 @@ func (v VRange) updateOpenAPISchema(schema *openapi3.Schema) {
 	schema.Min = &v.Min
 	schema.Max = &v.Max
 }
-func (v VRange) Validate(r *Request, paramName string) error {
+func (v VRange) Validate(r *request.Request, paramName string) error {
 	vr := VIsFloat{}
 	err := vr.Validate(r, paramName)
 	if err != nil {
@@ -146,10 +150,10 @@ here is an example for logging middleware, that logs requests in the format that
 <summary>See middleware</summary>
 
 ```go
-type SimpleLoggingMiddleware struct{}
+type LoggingMiddleware struct{}
 
-func (SimpleLoggingMiddleware) Apply(next AppHandler) AppHandler {
-	return func(request *Request) Response {
+func (LoggingMiddleware) Apply(next AppHandler) AppHandler {
+	return func(request *request.Request) responses.Response {
 		response := next(request)
 
 		scheme := "http"
@@ -160,13 +164,13 @@ func (SimpleLoggingMiddleware) Apply(next AppHandler) AppHandler {
 
 		method := request.HTTPRequest.Method
 		path := request.HTTPRequest.URL.Path
-		responseSize := len(response.toBytes())
+		responseSize := len(response.ToBytes())
 		remoteAddr := request.HTTPRequest.RemoteAddr
 		date := time.Now().Format("2006-01-02 15:04:05")
 		userAgent := request.HTTPRequest.UserAgent()
-		statusCode := response.statusCode()
+		statusCode := response.StatusCode()
 
-		fmt.Printf("%s - - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"\n", remoteAddr, date, method, path, request.HTTPRequest.Proto, statusCode, responseSize, fullURL, userAgent)
+		log.Printf("%s - - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"\n", remoteAddr, date, method, path, request.HTTPRequest.Proto, statusCode, responseSize, fullURL, userAgent)
 		return response
 	}
 }
@@ -182,11 +186,12 @@ import (
 	"net/http"
 
 	"github.com/hvuhsg/goapi"
+	"github.com/hvuhsg/goapi/middlewares"
 )
 
 func main() {
 	app := goapi.GoAPI("external handler", "1.0v")
-	app.Middlewares(goapi.SimpleLoggingMiddleware{})
+	app.Middlewares(middlewares.LoggingMiddleware{})
 }
 ```
 
@@ -234,7 +239,11 @@ To run the application over TLS just use the **RunTLS** method of the app.
 ```go
 package main
 
-import "github.com/hvuhsg/goapi"
+import (
+	"github.com/hvuhsg/goapi"
+	"github.com/hvuhsg/goapi/request"
+	"github.com/hvuhsg/goapi/responses"
+)
 
 func main() {
 	app := goapi.GoAPI("TLS example", "1.0v")
@@ -242,8 +251,8 @@ func main() {
 	root := app.Path("/")
 	root.Methods(goapi.GET)
 	root.Description("simple route")
-	root.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.HtmlResponse{Content: "<h1>HTML Over HTTPS</h1>", Code: 200}
+	root.Action(func(request *request.Request) responses.Response {
+		return responses.NewHTMLResponse("<h1>HTML Over HTTPS</h1>", 200)
 	})
 
 	app.RunTLS("127.0.0.1", 8080, "./server.crt", "./server.key")
@@ -263,6 +272,8 @@ import (
 	"os"
 
 	"github.com/hvuhsg/goapi"
+	"github.com/hvuhsg/goapi/request"
+	"github.com/hvuhsg/goapi/responses"
 )
 
 func main() {
@@ -271,8 +282,8 @@ func main() {
 	echo := app.Path("/")
 	echo.Methods(goapi.GET)
 	echo.Description("home page")
-	echo.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.HtmlResponse{Content: "<h1>Served over ngrok tunnel</h1>"}
+	echo.Action(func(request *request.Request) responses.Response {
+		return responses.NewHTMLResponse("<h1>Served over ngrok tunnel</h1>", 200)
 	})
 
 	ngrokToken := os.Getenv("NGROK_TOKEN")

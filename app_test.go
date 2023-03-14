@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/hvuhsg/goapi"
+	"github.com/hvuhsg/goapi/request"
+	"github.com/hvuhsg/goapi/responses"
 )
 
 func TestCreateView(t *testing.T) {
@@ -20,7 +22,7 @@ func TestCreateView(t *testing.T) {
 		}()
 
 		app.Path("/a").Description("test view").Parameter("t", goapi.QUERY).Action(
-			func(request *goapi.Request) goapi.Response { return goapi.HtmlResponse{Content: "1"} },
+			func(request *request.Request) responses.Response { return responses.NewHTMLResponse("1", 200) },
 		)
 	})
 
@@ -32,7 +34,7 @@ func TestCreateView(t *testing.T) {
 		}()
 
 		app.Path("/b").Methods(goapi.GET).Parameter("t", goapi.QUERY).Action(
-			func(request *goapi.Request) goapi.Response { return goapi.HtmlResponse{Content: "1"} },
+			func(request *request.Request) responses.Response { return responses.NewHTMLResponse("1", 200) },
 		)
 	})
 
@@ -44,16 +46,16 @@ func TestCreateView(t *testing.T) {
 		}()
 
 		app.Path("/c").Methods(goapi.GET).Description("c").Parameter("t", goapi.QUERY).Action(
-			func(request *goapi.Request) goapi.Response { return goapi.HtmlResponse{Content: "1"} },
+			func(request *request.Request) responses.Response { return responses.NewHTMLResponse("1", 200) },
 		)
 		app.Path("/c").Methods(goapi.GET).Description("c").Parameter("t", goapi.QUERY).Action(
-			func(request *goapi.Request) goapi.Response { return goapi.HtmlResponse{Content: "1"} },
+			func(request *request.Request) responses.Response { return responses.NewHTMLResponse("1", 200) },
 		)
 	})
 
 	app.Path("/").Methods(goapi.GET).Description("test view").Parameter("t", goapi.QUERY).Action(
-		func(request *goapi.Request) goapi.Response {
-			return goapi.HtmlResponse{Content: "1"}
+		func(request *request.Request) responses.Response {
+			return responses.NewHTMLResponse("1", 200)
 		},
 	)
 }
@@ -64,8 +66,8 @@ func TestRunApp(t *testing.T) {
 	ping.Methods(goapi.GET)
 	ping.Description("ping pong")
 	ping.Parameter("age", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 5, Max: 25})
-	ping.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.JsonResponse{Content: goapi.Json{"age": request.GetInt("age")}, Code: 200}
+	ping.Action(func(request *request.Request) responses.Response {
+		return responses.NewJSONResponse(responses.Json{"age": request.GetInt("age")}, 200)
 	})
 
 	go app.Run("127.0.0.1", 8080)
@@ -105,8 +107,8 @@ func TestOpenAPISchema(t *testing.T) {
 	add.Description("Add two numbers")
 	add.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
 	add.Parameter("b", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
-	add.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.JsonResponse{Content: goapi.Json{"sum": request.GetInt("a") + request.GetInt("b")}, Code: 200}
+	add.Action(func(request *request.Request) responses.Response {
+		return responses.NewJSONResponse(responses.Json{"sum": request.GetInt("a") + request.GetInt("b")}, 200)
 	})
 
 	sub := app.Path("/sub")
@@ -116,8 +118,8 @@ func TestOpenAPISchema(t *testing.T) {
 	add.Description("Subtruct two numbers (a - b)")
 	add.Parameter("a", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
 	add.Parameter("b", goapi.QUERY, goapi.VRequired{}, goapi.VIsInt{}, goapi.VRange{Min: 0, Max: 100})
-	add.Action(func(request *goapi.Request) goapi.Response {
-		return goapi.JsonResponse{Content: goapi.Json{"result": request.GetInt("a") - request.GetInt("b")}, Code: 200}
+	add.Action(func(request *request.Request) responses.Response {
+		return responses.NewJSONResponse(responses.Json{"result": request.GetInt("a") - request.GetInt("b")}, 200)
 	})
 
 	go app.Run("127.0.0.1", 8081)
