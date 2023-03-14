@@ -9,12 +9,12 @@ import (
 )
 
 func main() {
-	app := goapi.GoAPI("small", "1.0v")
+	app := goapi.GoAPI("template", "1.0v")
 
 	echo := app.Path("/")
 	echo.Methods(goapi.GET)
 	echo.Description("get template")
-	echo.Action(func(request *request.Request) responses.Response {
+	echo.Action(func(_ *request.Request) responses.Response {
 		data := map[string]string{"Title": "ss", "Header": "sadd", "Content": "asdsd"}
 		return responses.NewTemplateResponse("./index.html", data, 200)
 	})
