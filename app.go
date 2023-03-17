@@ -178,7 +178,6 @@ func (a *App) RunTLS(host string, port int, certFile string, keyFile string) err
 // Use ngrok tunnel for development
 func (a *App) RunNgrok(authtoken string) error {
 	mux := a.baseRouter()
-	ngrok.WithAuthtokenFromEnv()
 	tun, err := ngrok.Listen(context.Background(),
 		config.HTTPEndpoint(),
 		ngrok.WithAuthtoken(authtoken),
