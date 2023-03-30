@@ -11,44 +11,20 @@ import (
 )
 
 const (
-	GET     int = iota
-	POST    int = iota
-	PATCH   int = iota
-	DELETE  int = iota
-	PUT     int = iota
-	HEAD    int = iota
-	OPTIONS int = iota
-	CONNECT int = iota
-	TRACE   int = iota
+	GET     string = http.MethodGet
+	POST    string = http.MethodPost
+	PATCH   string = http.MethodPatch
+	DELETE  string = http.MethodDelete
+	PUT     string = http.MethodPut
+	HEAD    string = http.MethodHead
+	OPTIONS string = http.MethodOptions
+	CONNECT string = http.MethodConnect
+	TRACE   string = http.MethodTrace
 )
-
-var methodStringToCode = map[string]int{
-	"GET":     GET,
-	"POST":    POST,
-	"PATCH":   PATCH,
-	"DELETE":  DELETE,
-	"PUT":     PUT,
-	"HEAD":    HEAD,
-	"OPTIONS": OPTIONS,
-	"CONNECT": CONNECT,
-	"TRACE":   TRACE,
-}
-
-var methodCodeToString = map[int]string{
-	GET:     "GET",
-	POST:    "POST",
-	PATCH:   "PATCH",
-	DELETE:  "DELETE",
-	PUT:     "PUT",
-	HEAD:    "HEAD",
-	OPTIONS: "OPTIONS",
-	CONNECT: "CONNECT",
-	TRACE:   "TRACE",
-}
 
 type View struct {
 	path        string
-	methods     map[int]struct{}
+	methods     []string
 	parameters  map[string]Parameter
 	description string
 	tags        []string
@@ -60,7 +36,7 @@ type View struct {
 func NewView(path string) *View {
 	view := new(View)
 	view.path = path
-	view.methods = make(map[int]struct{})
+	view.methods = make([]string, 0)
 	view.parameters = make(map[string]Parameter)
 	view.description = ""
 	view.tags = make([]string, 0)
@@ -82,11 +58,6 @@ func (v *View) requireDescription() {
 	}
 }
 
-func (v *View) validMethod(req *http.Request) bool {
-	_, ok := v.methods[methodStringToCode[req.Method]]
-	return ok
-}
-
 func (v *View) isValidRequest(r *request.Request) (bool, error) {
 	for paramName, param := range v.parameters {
 		for _, validator := range param.validators {
@@ -101,6 +72,10 @@ func (v *View) isValidRequest(r *request.Request) (bool, error) {
 }
 
 func (v *View) applyMiddlewares(appMiddlewares []middlewares.Middleware) {
+	// Add methods middleware
+	mm := newMethodsMiddleware(v.methods)
+	v.action = mm.Apply(v.action)
+
 	// Apply app middlewares
 	for i := len(appMiddlewares) - 1; i >= 0; i-- {
 		m := appMiddlewares[i]
@@ -122,12 +97,6 @@ func (v *View) requestHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 	}()
-
-	// Check if request method is in allowed for this request
-	if !v.validMethod(r) {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
-		return
-	}
 
 	req := request.NewRequest(r)
 
@@ -161,10 +130,8 @@ func (v *View) Tags(tags ...string) *View {
 	return v
 }
 
-func (v *View) Methods(methods ...int) *View {
-	for method := range methods {
-		v.methods[method] = struct{}{}
-	}
+func (v *View) Methods(methods ...string) *View {
+	v.methods = methods
 	return v
 }
 

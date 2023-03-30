@@ -19,7 +19,7 @@ func NewTemplateResponse(tmpPath string, data any, code int) Response {
 
 func (tr templateResponse) Headers() http.Header {
 	tr.headers = http.Header{}
-	tr.headers.Add("Content-Type", "text/html")
+	tr.headers.Set("Content-Type", "text/html")
 	return tr.headers
 }
 

@@ -19,7 +19,7 @@ func NewJSONResponse(content Json, code int) Response {
 
 func (jr jsonResponse) Headers() http.Header {
 	jr.headers = http.Header{}
-	jr.headers.Add("Content-Type", "application/json")
+	jr.headers.Set("Content-Type", "application/json")
 	return jr.headers
 }
 

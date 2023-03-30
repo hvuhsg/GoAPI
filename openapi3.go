@@ -20,8 +20,7 @@ func openapi3Schema(a *App) ([]byte, error) {
 		}
 
 		// Loop through each HTTP method defined for the view
-		for method := range view.methods {
-			methodString := methodCodeToString[method]
+		for _, method := range view.methods {
 			parameters := make(openapi3.Parameters, 0)
 
 			// Loop through each parameter defined for the view
@@ -68,7 +67,7 @@ func openapi3Schema(a *App) ([]byte, error) {
 				Deprecated:  view.depreceted,
 			}
 
-			path.SetOperation(methodString, &operation)
+			path.SetOperation(method, &operation)
 		}
 
 		paths[view.path] = path

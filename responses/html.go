@@ -14,7 +14,7 @@ func NewHTMLResponse(content string, code int) Response {
 
 func (hr htmlResponse) Headers() http.Header {
 	hr.headers = http.Header{}
-	hr.headers.Add("Content-Type", "text/html")
+	hr.headers.Set("Content-Type", "text/html")
 	return hr.headers
 }
 
