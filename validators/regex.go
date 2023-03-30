@@ -13,7 +13,7 @@ type VRegex struct {
 }
 
 func (v VRegex) UpdateOpenAPISchema(schema *openapi3.Schema) {
-	// Not applicable
+	schema.Pattern = v.Regex
 }
 
 func (v VRegex) Validate(r *request.Request, paramName string) error {
