@@ -112,7 +112,7 @@ func registerDocs(a *App, mux *http.ServeMux) {
 		w.Write(schema)
 	})
 
-	mux.HandleFunc(a.openapiDocsURL, func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(a.openapiDocsURL, func(w http.ResponseWriter, _ *http.Request) {
 		swaggerJsUrl := "https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui-bundle.js"
 		swaggerCssUrl := "https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui.css"
 		swaggerFavIconUrl := "https://fastapi.tiangolo.com/img/favicon.png"
