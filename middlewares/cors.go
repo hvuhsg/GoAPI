@@ -37,8 +37,9 @@ func (cm *corsMiddleware) originIsAllowed(origin string) bool {
 func (cm corsMiddleware) Apply(next AppHandler) AppHandler {
 	return func(request *request.Request) responses.Response {
 		isOptionsMethod := request.HTTPRequest.Method == http.MethodOptions
+		isGetMethod := request.HTTPRequest.Method == http.MethodGet
 
-		if isOptionsMethod {
+		if isOptionsMethod || isGetMethod {
 			if cm.originIsAllowed(request.HTTPRequest.Header.Get("Origin")) {
 				response := responses.NewHTMLResponse("", http.StatusOK)
 				response.Headers().Set("Access-Control-Allow-Origin", request.HTTPRequest.Header.Get("Origin"))
