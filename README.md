@@ -7,6 +7,9 @@
 	<a href="https://github.com/hvuhsg/GoAPI/actions/workflows/tests.yml" target="_blank">
 		<img src="https://github.com/hvuhsg/GoAPI/actions/workflows/tests.yml/badge.svg?branch=main" alt="tests status">
 	</a>
+	<a href="https://www.standwithus.com/" target="_blank">
+		<img src="https://badge.yehoyada.com" alt="Bring Them Home">
+	</a>
 </p>
 
 ---
